@@ -547,15 +547,15 @@
                 </div>
             </div>
              <div class="mb-4 flex justify-center items-center space-x-2">
-                <button id="addMasterMaterialBtn" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">マスタ登録</button>
+                <button id="addMasterMaterialBtn" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">資材マスタ登録</button>
                 <input type="file" id="masterCsvFile" accept=".csv" class="hidden">
                 <button id="importMasterCsvBtn" class="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors shadow-md text-sm action-btn-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15M9 12l3 3m0 0 3-3m-3 3V2.25" /></svg>
-                    <span>マスタCSVインポート</span>
+                    <span>資材マスタインポート</span>
                 </button>
                 <button id="exportMasterCsvBtn" class="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors shadow-md text-sm action-btn-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15" /></svg>
-                    <span>マスタCSVエクスポート</span>
+                    <span>資材マスタエクスポート</span>
                 </button>
                 <button id="deleteSelectedMasterBtn" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors shadow-md text-sm">選択行を削除</button>
             </div>
@@ -641,7 +641,7 @@
 
 
     <script>
-        const APP_VERSION = "1.0.78"; // アプリケーションのバージョン (更新)
+        const APP_VERSION = "1.0.80"; // アプリケーションのバージョン (更新)
 
         let currentYear = new Date().getFullYear();
         let currentMonth = new Date().getMonth(); // 0-11 (January is 0, December is 11)
@@ -756,7 +756,7 @@
             setTimeout(() => {
                 toast.classList.remove('show');
                 setTimeout(() => {
-                    if (toast.parentNode === toastContainer) { // 要素がまだ存在する場合のみ削除
+                    if (toast.parentNode === toastContainer) {
                         toastContainer.removeChild(toast);
                     }
                 }, 300);
@@ -979,13 +979,10 @@
 
         function updateMonthDisplay() {
             const selectValue = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
-            // プルダウンに該当のvalueが存在するか確認してから設定
             if (Array.from(monthSelect.options).some(opt => opt.value === selectValue)) {
                 monthSelect.value = selectValue;
             } else if (monthSelect.options.length > 0) {
-                // 存在しない場合、最初のオプションを選択状態にするか、または何もしない
-                // ここでは、もし該当がなければ何もしない（または最初の有効な月を再計算して設定）
-                // 今回は、populateMonthSelectで必ず現在の年月が含まれるようにしているので、基本的にはここに来ないはず
+                // 該当がない場合、最初の有効な月を選択させるか、現在の表示を維持する
             }
         }
 
@@ -1648,13 +1645,10 @@
             if (newMasterNameError) newMasterNameError.textContent = '';
             if (newMasterUnitPriceError) newMasterUnitPriceError.textContent = '';
             if (newMasterMinLotError) newMasterMinLotError.textContent = '';
-            // 他の入力フィールドのエラー表示用DOM要素があれば、それらもクリア
-            // 例: document.getElementById('newMasterUnitError').textContent = '';
 
             if (editMasterNameError) editMasterNameError.textContent = '';
             if (editMasterUnitPriceError) editMasterUnitPriceError.textContent = '';
             if (editMasterMinLotError) editMasterMinLotError.textContent = '';
-            // 他の編集モーダル内のエラー表示用DOM要素もクリア
         }
 
         function handleAddMasterMaterial() {
@@ -1675,7 +1669,7 @@
             }
 
             const unitPrice = parseFloat(unitPriceStr);
-            if (unitPriceStr && isNaN(unitPrice)) { // 値があり、かつ数値でない場合
+            if (unitPriceStr && isNaN(unitPrice)) {
                 newMasterUnitPriceError.textContent = "単価は数値で入力してください。";
                 isValid = false;
             }
@@ -2129,7 +2123,7 @@
 
         function parseAndImportCsv(csvData) {
             console.log("[PARSE_CSV] Parsing CSV data.");
-            let firstProcessedMonthKey = null; // ★ 修正: インポートされた最初の有効な年月を格納する変数
+            let firstProcessedMonthKey = null;
             const lines = csvData.split(/\r\n|\n/).filter(line => line.trim() !== '');
             if (lines.length < 1) {
                 showInfoDialog("インポートエラー", "発注CSVファイルに処理可能なデータがありません（ヘッダー行のみ、または空のファイル）。", true);
@@ -2173,32 +2167,40 @@
                 if (!line.trim()) continue;
 
                 const values = parseCsvLine(line);
-                const currentLineNum = i + 1;
+                const currentLineNum = i + 1; // CSVファイルの物理行番号 (1始まり)
 
+                // 年月チェック
                 const yearMonthStr = values[yearMonthIndex]?.trim() || '';
-                if (!yearMonthStr || !/^\d{4}-\d{1,2}$/.test(yearMonthStr)) {
-                    errorMessages.push(`${currentLineNum}行目: 年月「${yearMonthStr}」の形式が不正です (YYYY-MM)。スキップしました。`);
+                const yearMonthMatch = yearMonthStr.match(/^(\d{4})-(\d{1,2})$/);
+                if (!yearMonthMatch) {
+                    errorMessages.push(`${currentLineNum}行目: 年月「${yearMonthStr}」の形式が不正です (YYYY-MM)。この行はスキップされました。`);
                     continue;
                 }
-                const [year, monthNum] = yearMonthStr.split('-').map(Number);
+                const year = parseInt(yearMonthMatch[1], 10);
+                const monthNum = parseInt(yearMonthMatch[2], 10);
+
+                if (monthNum < 1 || monthNum > 12) {
+                    errorMessages.push(`${currentLineNum}行目: 年月「${yearMonthStr}」の月が無効です (1-12)。この行はスキップされました。`);
+                    continue;
+                }
                 const monthKey = `${year}-${String(monthNum).padStart(2, '0')}`;
 
-                if (firstProcessedMonthKey === null) { // ★ 修正: 最初に処理された有効な monthKey を記録
+                if (firstProcessedMonthKey === null) {
                     firstProcessedMonthKey = monthKey;
                 }
-
 
                 if (!materialsData[monthKey]) {
                     materialsData[monthKey] = [];
                 }
 
+                // 資材名チェック
                 const materialNameFromCsv = values[materialNameIndex]?.trim() || '';
                 if (!materialNameFromCsv) {
-                     errorMessages.push(`${currentLineNum}行目: 資材名が空です。スキップしました。`);
+                     errorMessages.push(`${currentLineNum}行目: 資材名が空です。この行はスキップされました。`);
                     continue;
                 }
 
-
+                // 資材マスタ存在確認・新規登録
                 let masterId = Object.keys(materialMasterData).find(id => materialMasterData[id].name === materialNameFromCsv);
                 if (!masterId) {
                     masterId = `master-${Date.now()}-${Math.random().toString(36).substr(2, 5)}-imported-${i}`;
@@ -2207,43 +2209,39 @@
                         id: masterId, name: materialNameFromCsv, unitPrice: unitPriceFromCsv,
                         unit: '', minLot: 0, orderCompany: '' };
                     masterAddedCount++;
-                    errorMessages.push(`情報: 資材マスタに「${materialNameFromCsv}」を新規登録しました (単価: ${unitPriceFromCsv || 0})。`);
+                    errorMessages.push(`情報 (${currentLineNum}行目): 資材マスタに「${materialNameFromCsv}」を新規登録しました (単価: ${unitPriceFromCsv || 0})。`);
                 }
 
-
+                // 発注データの処理対象特定または新規作成
                 const existingMaterialIndex = materialsData[monthKey].findIndex(m => m.masterId === masterId);
-
                 let targetMaterial;
+                let isNewEntryForThisMonth = false;
                 if (existingMaterialIndex !== -1) {
                     targetMaterial = materialsData[monthKey][existingMaterialIndex];
-                    updatedCount++;
                 } else {
                     targetMaterial = {
                         id: `material-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-imported-${i}`,
                         masterId: masterId,
                         weeks: Array(5).fill(null).map(() => ({ tueOrder: '', thuOrder: '' })),
+                        stock: '', // ★修正: 初期値を空にする
+                        remarks: ''
                     };
-                    materialsData[monthKey].push(targetMaterial);
-                    addedCount++;
+                    isNewEntryForThisMonth = true;
                 }
 
+                // 在庫の処理 (★修正: エラーでもスキップしない)
                 const stockStr = values[stockIndex]?.trim();
                 if (stockStr && isNaN(parseFloat(stockStr))) {
-                     errorMessages.push(`${currentLineNum}行目 (資材名: ${materialNameFromCsv}): 在庫「${stockStr}」は数値である必要があります。スキップしました。`);
-                     if (addedCount > 0 && targetMaterial.id === materialsData[monthKey][materialsData[monthKey].length -1].id) {
-                        materialsData[monthKey].pop();
-                        addedCount--;
-                     } else if (updatedCount > 0 && targetMaterial === materialsData[monthKey][existingMaterialIndex]) { // existingMaterialIndex を使うべき
-                        // 更新対象だった場合は、この行の更新を取りやめるが、件数からは引かない（エラーとして報告するため）
-                        // ただし、この行の処理自体をスキップするので、importedCount にも影響
-                     }
-                    continue; // この行の処理を中断
+                     errorMessages.push(`警告 (${currentLineNum}行目 資材: ${materialNameFromCsv}): 在庫「${stockStr}」は数値ではありません。在庫は空として扱われます。`);
+                     targetMaterial.stock = ''; // 在庫は空にする
+                } else {
+                    targetMaterial.stock = stockStr || '';
                 }
-                targetMaterial.stock = stockStr || '';
-
 
                 targetMaterial.remarks = remarksIndex !== -1 ? (values[remarksIndex]?.trim() || '') : '';
 
+                // 発注数の処理
+                let orderErrorInRow = false;
                 for (let weekIdx = 0; weekIdx < 5; weekIdx++) {
                     targetMaterial.weeks[weekIdx] = targetMaterial.weeks[weekIdx] || { tueOrder: '', thuOrder: ''};
                     const tueOrderIdx = orderHeaderIndices[weekIdx].tueOrder;
@@ -2252,8 +2250,9 @@
                     if (tueOrderIdx !== -1 && values[tueOrderIdx] !== undefined) {
                         const tueOrderStr = values[tueOrderIdx].trim();
                         if (tueOrderStr && isNaN(parseInt(tueOrderStr))) {
-                            errorMessages.push(`${currentLineNum}行目 (資材名: ${materialNameFromCsv}): 第${weekIdx+1}火曜の発注数「${tueOrderStr}」は数値である必要があります。`);
+                            errorMessages.push(`警告 (${currentLineNum}行目 資材: ${materialNameFromCsv}): 第${weekIdx+1}火曜の発注数「${tueOrderStr}」は数値ではありません。この発注数は無視されます。`);
                             targetMaterial.weeks[weekIdx].tueOrder = '';
+                            orderErrorInRow = true;
                         } else {
                             targetMaterial.weeks[weekIdx].tueOrder = tueOrderStr;
                         }
@@ -2261,12 +2260,22 @@
                     if (thuOrderIdx !== -1 && values[thuOrderIdx] !== undefined) {
                         const thuOrderStr = values[thuOrderIdx].trim();
                         if (thuOrderStr && isNaN(parseInt(thuOrderStr))) {
-                            errorMessages.push(`${currentLineNum}行目 (資材名: ${materialNameFromCsv}): 第${weekIdx+1}木曜の発注数「${thuOrderStr}」は数値である必要があります。`);
+                            errorMessages.push(`警告 (${currentLineNum}行目 資材: ${materialNameFromCsv}): 第${weekIdx+1}木曜の発注数「${thuOrderStr}」は数値ではありません。この発注数は無視されます。`);
                             targetMaterial.weeks[weekIdx].thuOrder = '';
+                            orderErrorInRow = true;
                         } else {
                             targetMaterial.weeks[weekIdx].thuOrder = thuOrderStr;
                         }
                     }
+                }
+
+                // 実際にデータを追加/更新
+                if (isNewEntryForThisMonth) {
+                    materialsData[monthKey].push(targetMaterial);
+                    addedCount++;
+                } else {
+                    // 既存データの更新なので、targetMaterial は既に materialsData[monthKey] の参照
+                    updatedCount++;
                 }
                 importedCount++;
             }
@@ -2279,14 +2288,11 @@
                     renderMaterialMasterTable();
                 }
 
-                // ★ 修正: インポートされたデータに基づいて表示年月を更新
                 if (firstProcessedMonthKey) {
                     const [impYear, impMonthNum] = firstProcessedMonthKey.split('-').map(Number);
                     currentYear = impYear;
-                    currentMonth = impMonthNum - 1; // JavaScriptの月は0から始まるため
+                    currentMonth = impMonthNum - 1;
                 }
-                // もしインポートデータに有効な年月がなかった場合でも、既存のcurrentYear/Monthを維持する。
-                // populateMonthSelectとupdateMonthDisplayで現在の選択肢と表示が更新される。
 
                 populateMonthSelect();
                 updateMonthDisplay();
@@ -2296,7 +2302,7 @@
                 finalMessage = `${importedCount}件の発注データが処理されました。\n(発注表 新規追加: ${addedCount}件, 発注表 更新: ${updatedCount}件)\n(資材マスタ 新規追加: ${masterAddedCount}件)`;
                  if (errorMessages.length > 0) {
                     finalMessage += `\n\n以下のエラー/警告があります:\n` + errorMessages.join('\n');
-                    showInfoDialog("インポート結果（一部エラーあり）", finalMessage, true);
+                    showInfoDialog("インポート結果（一部エラー/警告あり）", finalMessage, true);
                 } else {
                     showToast(finalMessage.replace(/\n/g, ' '), 'success', 5000);
                 }
