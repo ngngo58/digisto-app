@@ -1,0 +1,2321 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>デジタルストッカー ~DigiSto~ - 資材在庫発注管理ツール</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* カスタムスクロールバー */
+        .table-container::-webkit-scrollbar { height: 12px; width: 12px; }
+        .table-container::-webkit-scrollbar-track { background: #E2E8F0; border-radius: 10px; }
+        .table-container::-webkit-scrollbar-thumb { background: #718096; border-radius: 10px; }
+        .table-container::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* ページ全体のヘッダー固定 */
+        .sticky-page-header {
+            position: sticky;
+            top: 0;
+            background-color: white;
+            z-index: 40;
+            padding-top: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        /* テーブルコンテナ */
+        .table-container {
+            position: relative;
+            padding-left: 0;
+            padding-right: 0;
+            margin-top: 0.25rem;
+        }
+
+        /* テーブルヘッダー固定 */
+        .sticky-table-header th {
+            position: sticky;
+            top: 0;
+            background-color: #374151;
+            color: white;
+            z-index: 30;
+            vertical-align: top;
+            padding-top: 0.75rem;
+            padding-bottom: 0.75rem;
+            border-left: 1px solid #ffffff;
+        }
+        .sticky-table-header tr th:first-of-type {
+            border-left: none !important;
+        }
+        .sticky-table-header th.sticky-col-stock,
+        .sticky-table-header th.sticky-col-unit-price {
+            border-right: 1px solid #ffffff !important;
+        }
+        .sticky-table-header th .sort-indicator,
+        #materialMasterTable th .sort-indicator {
+            margin-left: 0.25rem;
+            font-size: 0.75em;
+        }
+        .sticky-table-header th.sortable:hover,
+        #materialMasterTable th.sortable:hover {
+            cursor: pointer;
+            background-color: #4b5563;
+        }
+        .header-lock-checkbox {
+            margin-left: 4px;
+            vertical-align: middle;
+        }
+
+        /* 固定列 (ヘッダー) */
+        .sticky-table-header .sticky-col-name,
+        .sticky-table-header .sticky-col-stock,
+        .sticky-table-header .sticky-col-unit-price {
+            position: sticky;
+            left: 0;
+            background-color: #374151;
+            z-index: 35;
+        }
+
+        /* 固定列 (ボディ) */
+        tbody td {
+            vertical-align: top;
+            padding-top: 0.375rem;
+            padding-bottom: 0.375rem;
+            border-right: 1px solid #e5e7eb;
+        }
+        tbody td:last-child {
+            border-right: none;
+        }
+
+        tbody .sticky-col-name,
+        tbody .sticky-col-stock,
+        tbody .sticky-col-unit-price {
+            position: sticky;
+            z-index: 10;
+        }
+        tbody .sticky-col-stock,
+        tbody .sticky-col-unit-price {
+            border-right: 1px solid #e5e7eb !important;
+        }
+
+
+        /* 行の背景色設定 */
+        tbody tr:nth-child(odd) td {
+            background-color: white;
+        }
+        tbody tr:nth-child(even) td {
+            background-color: #f0f4f8;
+        }
+        tbody tr:nth-child(odd) .sticky-col-name,
+        tbody tr:nth-child(odd) .sticky-col-stock,
+        tbody tr:nth-child(odd) .sticky-col-unit-price {
+            background-color: white !important;
+        }
+        tbody tr:nth-child(even) .sticky-col-name,
+        tbody tr:nth-child(even) .sticky-col-stock,
+        tbody tr:nth-child(even) .sticky-col-unit-price {
+            background-color: #f0f4f8 !important;
+        }
+
+        tbody tr:hover td {
+            background-color: #e0f2fe !important;
+        }
+        tbody tr:hover .sticky-col-name,
+        tbody tr:hover .sticky-col-stock,
+        tbody tr:hover .sticky-col-unit-price {
+            background-color: #e0f2fe !important;
+        }
+
+        /* 入力フィールドのスタイル */
+        td input[type="text"],
+        td input[type="number"],
+        td select,
+        td textarea {
+            width: 100%;
+            min-width: 70px;
+            padding: 0.25rem 0.5rem;
+            border: 1px solid #D1D5DB;
+            border-radius: 0.375rem;
+            box-sizing: border-box;
+            font-family: inherit;
+            font-size: inherit;
+        }
+        .material-name-select {
+            min-width: 180px;
+            width: 180px;
+        }
+
+        td input[data-field="stock"] { min-width: 80px; }
+        td.unit-price-cell,
+        td.total-order-amount-cell {
+            text-align: right;
+            padding-right: 0.75rem;
+            font-weight: normal;
+            vertical-align: middle;
+        }
+         td.total-order-cell {
+            text-align: right;
+            padding-right: 0.75rem;
+            font-weight: bold;
+            background-color: #e5e7eb;
+            vertical-align: middle;
+        }
+
+
+        /* 数量増減ボタンの新しいスタイル */
+        .quantity-controls { display: flex; align-items: center; }
+        .quantity-controls input[type="number"] {
+            width: calc(100% - 64px);
+            text-align: right;
+            border-radius: 0;
+            border-left: none;
+            border-right: none;
+        }
+        .quantity-btn {
+            width: 32px;
+            height: calc(1.5em + 0.5rem + 2px);
+            padding: 0.25rem;
+            border: 1px solid #D1D5DB;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.125rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.15s ease-in-out;
+        }
+        .increase-btn {
+            background-color: #14B8A6;
+            border-top-left-radius: 0.375rem;
+            border-bottom-left-radius: 0.375rem;
+            border-right: none;
+        }
+        .increase-btn:hover { background-color: #0D9488; }
+        .decrease-btn {
+            background-color: #64748B;
+            border-top-right-radius: 0.375rem;
+            border-bottom-right-radius: 0.375rem;
+            border-left: none;
+        }
+        .decrease-btn:hover { background-color: #475569; }
+
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+
+        /* 備考欄フローティング表示用スタイル */
+        .remarks-input-wrapper { position: relative; }
+        .remarks-floating-textarea {
+            position: fixed;
+            background-color: white;
+            border: 1px solid #6b7280;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            z-index: 50;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            line-height: 1.25rem;
+            overflow-y: auto;
+            min-width: 250px;
+            min-height: 80px;
+        }
+        /* 資材名全文表示用ポップアップ */
+        .material-name-popup {
+            position: fixed;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            padding: 10px;
+            z-index: 100;
+            max-width: 300px;
+            word-wrap: break-word;
+            border-radius: 0.375rem;
+        }
+        /* 月選択プルダウンのスタイル */
+        #monthSelect {
+            padding: 0.6rem 1rem;
+            border-radius: 0.375rem;
+            border: 1px solid #D1D5DB;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #374151;
+            background-color: white;
+            cursor: pointer;
+        }
+        #monthSelect:focus {
+            outline: 2px solid transparent;
+            outline-offset: 2px;
+            border-color: #2563EB;
+            box-shadow: 0 0 0 2px #BFDBFE;
+        }
+        /* インポート・エクスポートボタンのスタイル調整 */
+        .action-btn-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .action-btn-icon svg {
+            margin-right: 0.5rem;
+        }
+        #exportScopeSelect { /* エクスポート範囲選択のスタイル */
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            line-height: 1.25rem;
+            border-radius: 0.375rem;
+            border: 1px solid #D1D5DB;
+            background-color: white;
+            cursor: pointer;
+            margin-left: 0.5rem;
+        }
+        .action-group-label { /* グループラベルのスタイル */
+            font-size: 0.875rem; /* Tailwind: text-sm */
+            color: #4b5563; /* Tailwind: text-gray-600 */
+            margin-right: 0.5rem; /* Tailwind: mr-2 */
+            font-weight: 500; /* Tailwind: font-medium */
+        }
+        .lock-checkbox { /* ロック用チェックボックスのスタイル */
+            margin-left: 0.5rem;
+            cursor: pointer;
+        }
+        .order-cell-content { /* 発注数とロックチェックボックスを横並びにするためのコンテナ */
+            display: flex;
+            align-items: center;
+            justify-content: space-between; /* 発注数入力とチェックボックスを両端に */
+        }
+         .order-cell-content .quantity-controls {
+            flex-grow: 1; /* 発注数コントロールが可能な限り幅を取る */
+        }
+        /* バージョン情報表示用のスタイル */
+        #appVersionDisplay {
+            font-size: 0.75rem; /* Tailwind: text-xs */
+            color: #6b7280; /* Tailwind: text-gray-500 */
+            margin-left: 0.5rem; /* Tailwind: ml-2 */
+            font-weight: normal;
+        }
+        /* カスタム確認ダイアログのスタイル */
+        #customConfirmDialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1002; /* モーダルより手前に表示 */
+            display: none; /* 初期状態は非表示 */
+            text-align: center;
+        }
+        #customConfirmDialog p {
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+        #customConfirmDialog button {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            margin: 0 0.5rem;
+        }
+        #confirmYesBtn {
+            background-color: #dc2626; /* Tailwind: bg-red-600 */
+            color: white;
+        }
+        #confirmYesBtn:hover {
+            background-color: #b91c1c; /* Tailwind: bg-red-700 */
+        }
+        #confirmNoBtn {
+            background-color: #6b7280; /* Tailwind: bg-gray-500 */
+            color: white;
+        }
+        #confirmNoBtn:hover {
+            background-color: #4b5563; /* Tailwind: bg-gray-600 */
+        }
+        /* 資材マスタ管理セクション */
+        #materialMasterSection {
+            margin-top: 1.5rem; /* Tailwind: mt-6 */
+            padding: 1rem; /* Tailwind: p-4 */
+            background-color: #f9fafb; /* Tailwind: bg-gray-50 */
+            border-radius: 0.5rem; /* Tailwind: rounded-lg */
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+        }
+        #materialMasterSection h2 {
+            font-size: 1.5rem; /* Tailwind: text-2xl */
+            font-weight: 600; /* Tailwind: font-semibold */
+            margin-bottom: 1rem; /* Tailwind: mb-4 */
+        }
+        #materialMasterTable th, #materialMasterTable td {
+            padding: 0.5rem 0.75rem; /* Tailwind: px-3 py-2 */
+            border: 1px solid #e5e7eb; /* Tailwind: border-gray-200 */
+            vertical-align: middle;
+        }
+        #materialMasterTable th {
+            background-color: #e5e7eb; /* Tailwind: bg-gray-200 */
+            text-align: center;
+        }
+        #materialMasterTable th.master-checkbox-header {
+            width: 3rem;
+        }
+        #materialMasterTable th.master-actions-header {
+            width: 5rem;
+        }
+        #materialMasterTable td.master-checkbox-cell {
+            text-align: center;
+            width: 3rem;
+        }
+        #materialMasterTable td.master-actions-cell {
+            width: 5rem;
+            text-align: center;
+        }
+        #materialMasterTable td.master-name-cell {
+            text-align: center;
+        }
+        #materialMasterTable td.master-unit-price-cell {
+            text-align: right;
+            width: 6rem;
+        }
+        #materialMasterTable td.master-min-lot-cell {
+            text-align: right;
+        }
+        #materialMasterTable td.master-unit-cell {
+            text-align: center;
+            width: 7rem;
+        }
+        #materialMasterTable td.master-order-company-cell {
+            text-align: center;
+        }
+        .master-form-input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #D1D5DB;
+            border-radius: 0.375rem;
+            margin-bottom: 0.5rem;
+        }
+        .inline-error-message {
+            color: #dc2626; /* Tailwind: text-red-600 */
+            font-size: 0.75rem; /* Tailwind: text-xs */
+            margin-top: 0.25rem; /* Tailwind: mt-1 */
+        }
+
+        /* モーダルダイアログ */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1001; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgb(0,0,0); /* Fallback color */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 0.5rem;
+            position: relative;
+        }
+        .modal-content h3 {
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        .modal-content p {
+            margin-bottom: 0.75rem;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+        .modal-content ul {
+            list-style-type: disc;
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .modal-content li {
+            font-size: 0.875rem;
+        }
+        .modal-close-button {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .modal-close-button:hover,
+        .modal-close-button:focus {
+            color: black;
+            text-decoration: none;
+        }
+        #toastContainer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1005;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            background-color: #374151;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 0.375rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+            transform: translateX(100%);
+            font-size: 0.875rem;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .toast.success {
+            background-color: #059669;
+        }
+        .toast.error {
+            background-color: #dc2626;
+        }
+
+    </style>
+</head>
+<body class="bg-gray-100 font-sans pt-6 sm:pt-8">
+    <div id="toastContainer"></div>
+
+    <div class="container mx-auto px-1 sm:px-2">
+        <header class="sticky-page-header py-3">
+            <h1 class="text-3xl sm:text-4xl font-bold text-center text-gray-800 mb-4">
+                <span>デジタルストッカー ~DigiSto~</span>
+                <span id="appVersionDisplay"></span>
+            </h1>
+            <div class="flex justify-center items-center max-w-3xl mx-auto px-2">
+                <button id="prevMonthBtn" class="px-6 py-3 sm:px-7 sm:py-3.5 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors text-lg sm:text-xl shadow-md">前の月</button>
+                <select id="monthSelect" class="text-2xl sm:text-3xl font-bold text-gray-700 text-center flex-grow mx-4 sm:mx-8"></select>
+                <button id="nextMonthBtn" class="px-6 py-3 sm:px-7 sm:py-3.5 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors text-lg sm:text-xl shadow-md">次の月</button>
+            </div>
+            <div class="mt-4 text-center space-x-2">
+                <button id="addMaterialBtn" class="px-5 py-2.5 sm:px-6 sm:py-3 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors shadow-md text-base sm:text-lg">
+                    新しい資材を登録
+                </button>
+                <input type="file" id="csvFile" accept=".csv" class="hidden">
+                <button id="importCsvBtn" class="px-5 py-2.5 sm:px-6 sm:py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors shadow-md text-base sm:text-lg action-btn-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15M9 12l3 3m0 0 3-3m-3 3V2.25" /></svg>
+                    <span>発注インポート</span>
+                </button>
+                <button id="exportCsvBtn" class="px-5 py-2.5 sm:px-6 sm:py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-md text-base sm:text-lg action-btn-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15" /></svg>
+                    <span>発注エクスポート</span>
+                </button>
+                <select id="exportScopeSelect" class="py-2.5 sm:py-3">
+                    <option value="currentMonth">現在の月</option>
+                    <option value="currentYear">現在の年</option>
+                    <option value="all">全期間</option>
+                </select>
+                <button id="toggleMasterBtn" class="px-4 py-2.5 sm:py-3 bg-slate-500 text-white rounded-lg hover:bg-slate-600 transition-colors shadow-md text-base sm:text-lg">資材マスタ</button>
+            </div>
+        </header>
+
+        <div id="materialMasterSection" class="hidden my-6 p-4 bg-gray-50 rounded-lg shadow">
+            <h2 class="text-2xl font-semibold mb-4 text-center">資材マスタ管理</h2>
+            <div class="mb-4 grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+                <div>
+                    <input type="text" id="newMasterName" placeholder="資材名" class="master-form-input md:col-span-1">
+                    <div id="newMasterNameError" class="inline-error-message"></div>
+                </div>
+                <div>
+                    <input type="number" id="newMasterUnitPrice" placeholder="単価" class="master-form-input">
+                    <div id="newMasterUnitPriceError" class="inline-error-message"></div>
+                </div>
+                <div>
+                    <input type="number" id="newMasterMinLot" placeholder="最小ロット" class="master-form-input">
+                    <div id="newMasterMinLotError" class="inline-error-message"></div>
+                </div>
+                <div>
+                    <input type="text" id="newMasterUnit" placeholder="単位" class="master-form-input">
+                    <div id="newMasterUnitError" class="inline-error-message"></div>
+                </div>
+                <div>
+                    <input type="text" id="newMasterOrderCompany" placeholder="発注会社" class="master-form-input">
+                    <div id="newMasterOrderCompanyError" class="inline-error-message"></div>
+                </div>
+            </div>
+             <div class="mb-4 flex justify-center items-center space-x-2">
+                <button id="addMasterMaterialBtn" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">マスタ登録</button>
+                <input type="file" id="masterCsvFile" accept=".csv" class="hidden">
+                <button id="importMasterCsvBtn" class="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors shadow-md text-sm action-btn-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15M9 12l3 3m0 0 3-3m-3 3V2.25" /></svg>
+                    <span>マスタCSVインポート</span>
+                </button>
+                <button id="exportMasterCsvBtn" class="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors shadow-md text-sm action-btn-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15" /></svg>
+                    <span>マスタCSVエクスポート</span>
+                </button>
+                <button id="deleteSelectedMasterBtn" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors shadow-md text-sm">選択行を削除</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table id="materialMasterTable" class="min-w-full bg-white">
+                    <thead>
+                        <tr>
+                            <th class="master-checkbox-header"><input type="checkbox" id="masterSelectAllCheckbox" title="すべて選択/解除"></th>
+                            <th class="sortable" data-sort-key="name">資材名 <span class="sort-indicator"></span></th>
+                            <th class="sortable" data-sort-key="unitPrice">単価 <span class="sort-indicator"></span></th>
+                            <th class="sortable" data-sort-key="minLot">最小ロット <span class="sort-indicator"></span></th>
+                            <th>単位</th>
+                            <th class="sortable" data-sort-key="orderCompany">発注会社 <span class="sort-indicator"></span></th>
+                            <th class="master-actions-header">編集</th>
+                        </tr>
+                    </thead>
+                    <tbody id="materialMasterTableBody">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="editMasterModal" class="modal">
+            <div class="modal-content">
+                <span class="modal-close-button" id="closeEditMasterModal">&times;</span>
+                <h3 class="text-xl font-semibold mb-4">資材マスタ編集</h3>
+                <input type="hidden" id="editMasterId">
+                <div>
+                    <label for="editMasterNameInput" class="block text-sm font-medium text-gray-700">資材名</label>
+                    <input type="text" id="editMasterNameInput" class="master-form-input">
+                    <div id="editMasterNameError" class="inline-error-message"></div>
+                </div>
+                <div>
+                    <label for="editMasterUnitPriceInput" class="block text-sm font-medium text-gray-700">単価</label>
+                    <input type="number" id="editMasterUnitPriceInput" class="master-form-input">
+                    <div id="editMasterUnitPriceError" class="inline-error-message"></div>
+                </div>
+                <div>
+                    <label for="editMasterMinLotInput" class="block text-sm font-medium text-gray-700">最小ロット</label>
+                    <input type="number" id="editMasterMinLotInput" class="master-form-input">
+                    <div id="editMasterMinLotError" class="inline-error-message"></div>
+                </div>
+                <div>
+                    <label for="editMasterUnitInput" class="block text-sm font-medium text-gray-700">単位</label>
+                    <input type="text" id="editMasterUnitInput" class="master-form-input">
+                </div>
+                 <div>
+                    <label for="editMasterOrderCompanyInput" class="block text-sm font-medium text-gray-700">発注会社</label>
+                    <input type="text" id="editMasterOrderCompanyInput" class="master-form-input">
+                </div>
+                <button id="saveMasterEditBtn" class="mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">保存</button>
+            </div>
+        </div>
+
+
+        <div id="tableContainer" class="table-container overflow-x-auto bg-white rounded-lg shadow-lg">
+            <table id="materialsTable" class="min-w-full divide-y divide-gray-200 border-collapse">
+                <thead id="materialsTableHead" class="sticky-table-header">
+                    </thead>
+                <tbody id="materialsTableBody" class="bg-white divide-y divide-gray-200">
+                    </tbody>
+                </table>
+            <p id="noMaterialsMessage" class="text-gray-500 my-4 p-4 text-center hidden">この月には資材が登録されていません。「新しい資材を登録」ボタンから追加してください。</p>
+        </div>
+    </div>
+
+    <div id="customConfirmDialog">
+        <p id="confirmMessage"></p>
+        <button id="confirmYesBtn">はい</button>
+        <button id="confirmNoBtn">いいえ</button>
+    </div>
+
+    <div id="infoDialog" class="modal">
+        <div class="modal-content">
+            <span class="modal-close-button" id="infoDialogCloseBtn">&times;</span>
+            <h3 id="infoDialogTitle">情報</h3>
+            <div id="infoDialogMessage"></div>
+            <div class="mt-4 text-right">
+                <button id="infoDialogOkBtn" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">OK</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        const APP_VERSION = "1.0.78"; // アプリケーションのバージョン (更新)
+
+        let currentYear = new Date().getFullYear();
+        let currentMonth = new Date().getMonth(); // 0-11 (January is 0, December is 11)
+        const materialsData = loadAllData() || {};
+        let monthColumnLockStatus = loadMonthLockStatus() || {};
+        let materialMasterData = loadMaterialMasterData() || {};
+
+        // DOM要素の取得
+        const prevMonthBtn = document.getElementById('prevMonthBtn');
+        const nextMonthBtn = document.getElementById('nextMonthBtn');
+        const monthSelect = document.getElementById('monthSelect');
+        const addMaterialBtn = document.getElementById('addMaterialBtn');
+        const tableContainer = document.getElementById('tableContainer');
+        const materialsTable = document.getElementById('materialsTable');
+        const materialsTableHead = document.getElementById('materialsTableHead');
+        const materialsTableBody = document.getElementById('materialsTableBody');
+        const noMaterialsMessage = document.getElementById('noMaterialsMessage');
+        const importCsvBtn = document.getElementById('importCsvBtn');
+        const exportCsvBtn = document.getElementById('exportCsvBtn');
+        const csvFileInput = document.getElementById('csvFile');
+        const exportScopeSelect = document.getElementById('exportScopeSelect');
+        const appVersionDisplay = document.getElementById('appVersionDisplay');
+        const customConfirmDialog = document.getElementById('customConfirmDialog');
+        const confirmMessage = document.getElementById('confirmMessage');
+        const confirmYesBtn = document.getElementById('confirmYesBtn');
+        const confirmNoBtn = document.getElementById('confirmNoBtn');
+
+        // 資材マスタ関連DOM
+        const toggleMasterBtn = document.getElementById('toggleMasterBtn');
+        const materialMasterSection = document.getElementById('materialMasterSection');
+        const newMasterNameInput = document.getElementById('newMasterName');
+        const newMasterUnitPriceInput = document.getElementById('newMasterUnitPrice');
+        const newMasterUnitInput = document.getElementById('newMasterUnit');
+        const newMasterMinLotInput = document.getElementById('newMasterMinLot');
+        const newMasterOrderCompanyInput = document.getElementById('newMasterOrderCompany');
+        const addMasterMaterialBtn = document.getElementById('addMasterMaterialBtn');
+        const materialMasterTableEl = document.getElementById('materialMasterTable');
+        const materialMasterTableBodyEl = document.getElementById('materialMasterTableBody');
+        const editMasterModal = document.getElementById('editMasterModal');
+        const closeEditMasterModalBtn = document.getElementById('closeEditMasterModal');
+        const editMasterIdInput = document.getElementById('editMasterId');
+        const editMasterNameInput = document.getElementById('editMasterNameInput');
+        const editMasterUnitPriceInput = document.getElementById('editMasterUnitPriceInput');
+        const editMasterUnitInput = document.getElementById('editMasterUnitInput');
+        const editMasterMinLotInput = document.getElementById('editMasterMinLotInput');
+        const editMasterOrderCompanyInput = document.getElementById('editMasterOrderCompanyInput');
+        const saveMasterEditBtn = document.getElementById('saveMasterEditBtn');
+        const importMasterCsvBtn = document.getElementById('importMasterCsvBtn');
+        const exportMasterCsvBtn = document.getElementById('exportMasterCsvBtn');
+        const masterCsvFileInput = document.createElement('input');
+        masterCsvFileInput.type = 'file';
+        masterCsvFileInput.accept = '.csv';
+        masterCsvFileInput.classList.add('hidden');
+        document.body.appendChild(masterCsvFileInput);
+        const deleteSelectedMasterBtn = document.getElementById('deleteSelectedMasterBtn');
+
+        const newMasterNameError = document.getElementById('newMasterNameError');
+        const newMasterUnitPriceError = document.getElementById('newMasterUnitPriceError');
+        const newMasterMinLotError = document.getElementById('newMasterMinLotError');
+        const editMasterNameError = document.getElementById('editMasterNameError');
+        const editMasterUnitPriceError = document.getElementById('editMasterUnitPriceError');
+        const editMasterMinLotError = document.getElementById('editMasterMinLotError');
+
+
+        const infoDialog = document.getElementById('infoDialog');
+        const infoDialogTitle = document.getElementById('infoDialogTitle');
+        const infoDialogMessage = document.getElementById('infoDialogMessage');
+        const infoDialogCloseBtn = document.getElementById('infoDialogCloseBtn');
+        const infoDialogOkBtn = document.getElementById('infoDialogOkBtn');
+
+
+        let confirmCallback = null;
+
+        let currentFloatingTextarea = null;
+        let originalRemarksInputForFloating = null;
+        let currentMaterialNamePopup = null;
+
+        let currentSortColumn = null;
+        let currentSortDirection = 'asc';
+        let currentMasterSortColumn = null;
+        let currentMasterSortDirection = 'asc';
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("[INIT] DOMContentLoaded event fired.");
+            if(appVersionDisplay) {
+                appVersionDisplay.textContent = `Ver: ${APP_VERSION}`;
+            }
+            populateMonthSelect();
+            updateMonthDisplay();
+            renderTableStructure();
+            renderTableBody();
+            renderMaterialMasterTable();
+            setupEventListeners();
+            adjustStickyColumns();
+            console.log("[INIT] Initialization complete.");
+        });
+
+        window.addEventListener('resize', adjustStickyColumns);
+
+        function showToast(message, type = 'info', duration = 3000) {
+            const toastContainer = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.classList.add('toast', type);
+            toast.textContent = message;
+            toastContainer.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    if (toast.parentNode === toastContainer) { // 要素がまだ存在する場合のみ削除
+                        toastContainer.removeChild(toast);
+                    }
+                }, 300);
+            }, duration);
+        }
+
+        function showInfoDialog(title, messages, isError = false) {
+            infoDialogTitle.textContent = title;
+            if (Array.isArray(messages)) {
+                const ul = document.createElement('ul');
+                messages.forEach(msg => {
+                    const li = document.createElement('li');
+                    li.textContent = msg;
+                    ul.appendChild(li);
+                });
+                infoDialogMessage.innerHTML = '';
+                infoDialogMessage.appendChild(ul);
+            } else {
+                infoDialogMessage.innerHTML = `<p>${messages.replace(/\n/g, '<br>')}</p>`;
+            }
+            infoDialog.style.display = 'block';
+        }
+
+        function hideInfoDialog() {
+            infoDialog.style.display = 'none';
+        }
+
+
+        function setupEventListeners() {
+            console.log("[EVENT_SETUP] setupEventListeners called");
+            prevMonthBtn.addEventListener('click', () => {
+                currentMonth--;
+                if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+                currentSortColumn = null;
+                populateMonthSelect();
+                updateMonthDisplay();
+                renderTableStructure();
+                renderTableBody();
+            });
+
+            nextMonthBtn.addEventListener('click', () => {
+                currentMonth++;
+                if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+                currentSortColumn = null;
+                populateMonthSelect();
+                updateMonthDisplay();
+                renderTableStructure();
+                renderTableBody();
+            });
+
+            monthSelect.addEventListener('change', (event) => {
+                const [year, month] = event.target.value.split('-').map(Number);
+                currentYear = year;
+                currentMonth = month -1;
+                currentSortColumn = null;
+                updateMonthDisplay();
+                renderTableStructure();
+                renderTableBody();
+            });
+
+            addMaterialBtn.addEventListener('click', addNewMaterialToTable);
+            materialsTableBody.addEventListener('input', handleMaterialInputChange);
+
+            materialsTableBody.addEventListener('click', function(event) {
+                const target = event.target;
+                const quantityButton = target.closest('.quantity-btn');
+                const deleteButton = target.closest('button[data-action="delete"]');
+
+                if (deleteButton) {
+                    const rowToDelete = deleteButton.closest('tr');
+                    if (rowToDelete && rowToDelete.dataset.materialId) {
+                        handleDeleteMaterial(rowToDelete.dataset.materialId);
+                    }
+                } else if (quantityButton) {
+                    handleQuantityButtonClick(quantityButton);
+                } else if (currentMaterialNamePopup && !target.closest('.material-name-popup')) {
+                    closeMaterialNamePopup();
+                }
+            });
+             materialsTableBody.addEventListener('change', function(event) {
+                if (event.target.classList.contains('material-name-select')) {
+                    handleMaterialNameChange(event.target);
+                }
+            });
+            document.addEventListener('click', function(event) {
+                if (currentMaterialNamePopup &&
+                    !event.target.closest('.material-name-popup')) {
+                    closeMaterialNamePopup();
+                }
+            }, true);
+            materialsTableBody.addEventListener('focusin', handleRemarksFocus);
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') {
+                    if (currentFloatingTextarea) closeFloatingRemarksTextarea(true);
+                    if (currentMaterialNamePopup) closeMaterialNamePopup();
+                    if (customConfirmDialog.style.display === 'block') {
+                        hideCustomConfirm();
+                    }
+                    if (editMasterModal.style.display === "block") {
+                        closeEditMasterModal();
+                    }
+                    if (infoDialog.style.display === 'block') {
+                        hideInfoDialog();
+                    }
+                }
+            });
+
+            importCsvBtn.addEventListener('click', () => csvFileInput.click());
+            csvFileInput.addEventListener('change', handleFileUpload);
+            exportCsvBtn.addEventListener('click', exportDataToCsv);
+
+            confirmYesBtn.addEventListener('click', () => {
+                if (confirmCallback) confirmCallback(true);
+                hideCustomConfirm();
+            });
+            confirmNoBtn.addEventListener('click', () => {
+                if (confirmCallback) confirmCallback(false);
+                hideCustomConfirm();
+            });
+
+            toggleMasterBtn.addEventListener('click', () => {
+                materialMasterSection.classList.toggle('hidden');
+                toggleMasterBtn.textContent = materialMasterSection.classList.contains('hidden') ? '資材マスタ' : '資材マスタを閉じる';
+            });
+
+            if (addMasterMaterialBtn) {
+                 addMasterMaterialBtn.addEventListener('click', handleAddMasterMaterial);
+            }
+
+
+            closeEditMasterModalBtn.addEventListener('click', closeEditMasterModal);
+            saveMasterEditBtn.addEventListener('click', handleSaveMasterEdit);
+
+            importMasterCsvBtn.addEventListener('click', () => masterCsvFileInput.click());
+            masterCsvFileInput.addEventListener('change', handleMasterFileUpload);
+            exportMasterCsvBtn.addEventListener('click', exportMasterDataToCsv);
+
+            if (deleteSelectedMasterBtn) {
+                deleteSelectedMasterBtn.addEventListener('click', handleDeleteSelectedMasterMaterials);
+            }
+            if (materialMasterTableEl && materialMasterTableEl.tHead) {
+                const selectAllCheckbox = materialMasterTableEl.tHead.querySelector('#masterSelectAllCheckbox');
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.addEventListener('change', (event) => {
+                        materialMasterTableBodyEl.querySelectorAll('.master-delete-checkbox').forEach(checkbox => {
+                            checkbox.checked = event.target.checked;
+                        });
+                    });
+                }
+            }
+
+
+            if (materialMasterTableEl && materialMasterTableEl.tHead) {
+                materialMasterTableEl.tHead.querySelectorAll('th.sortable').forEach(th => {
+                    th.addEventListener('click', () => {
+                        const sortKey = th.dataset.sortKey;
+                        if (currentMasterSortColumn === sortKey) {
+                            currentMasterSortDirection = currentMasterSortDirection === 'asc' ? 'desc' : 'asc';
+                        } else {
+                            currentMasterSortColumn = sortKey;
+                            currentMasterSortDirection = 'asc';
+                        }
+                        renderMaterialMasterTable();
+                    });
+                });
+            }
+            infoDialogCloseBtn.addEventListener('click', hideInfoDialog);
+            infoDialogOkBtn.addEventListener('click', hideInfoDialog);
+
+
+            console.log("[EVENT_SETUP] All event listeners configured.");
+        }
+
+        function showCustomConfirm(message, callback) {
+            confirmMessage.textContent = message;
+            confirmCallback = callback;
+            customConfirmDialog.style.display = 'block';
+        }
+
+        function hideCustomConfirm() {
+            customConfirmDialog.style.display = 'none';
+            confirmCallback = null;
+        }
+
+
+        function populateMonthSelect() {
+            monthSelect.innerHTML = '';
+            const dataKeys = Object.keys(materialsData);
+            const availableYearMonths = new Set();
+            dataKeys.forEach(key => availableYearMonths.add(key));
+            const currentDisplayMonthKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+            availableYearMonths.add(currentDisplayMonthKey);
+
+            const sortedMonthKeys = Array.from(availableYearMonths)
+                .map(key => {
+                    const [year, month] = key.split('-').map(Number);
+                    return { year, month, key };
+                })
+                .sort((a, b) => {
+                    if (a.year !== b.year) return a.year - b.year;
+                    return a.month - b.month;
+                })
+                .map(item => item.key);
+
+            if (sortedMonthKeys.length === 0) {
+                const option = document.createElement('option');
+                option.value = currentDisplayMonthKey;
+                option.textContent = `${currentYear}年 ${currentMonth + 1}月`;
+                monthSelect.appendChild(option);
+            } else {
+                sortedMonthKeys.forEach(key => {
+                    const [year, monthNum] = key.split('-').map(Number);
+                    const option = document.createElement('option');
+                    option.value = key;
+                    option.textContent = `${year}年 ${monthNum}月`;
+                    monthSelect.appendChild(option);
+                });
+            }
+        }
+
+        function updateMonthDisplay() {
+            const selectValue = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+            // プルダウンに該当のvalueが存在するか確認してから設定
+            if (Array.from(monthSelect.options).some(opt => opt.value === selectValue)) {
+                monthSelect.value = selectValue;
+            } else if (monthSelect.options.length > 0) {
+                // 存在しない場合、最初のオプションを選択状態にするか、または何もしない
+                // ここでは、もし該当がなければ何もしない（または最初の有効な月を再計算して設定）
+                // 今回は、populateMonthSelectで必ず現在の年月が含まれるようにしているので、基本的にはここに来ないはず
+            }
+        }
+
+        function getOrderDaysForMonth(year, month) {
+            const orderDaysByWeek = [];
+            let weekCounter = 0;
+            const firstDateOfMonth = new Date(year, month, 1);
+            const lastDateOfMonth = new Date(year, month + 1, 0);
+            const daysInMonth = lastDateOfMonth.getDate();
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const currentDate = new Date(year, month, day);
+                const dayOfWeek = currentDate.getDay();
+
+                if (day === 1 || dayOfWeek === 1) {
+                    if (orderDaysByWeek.length > 0 &&
+                        (orderDaysByWeek[orderDaysByWeek.length -1].tue || orderDaysByWeek[orderDaysByWeek.length -1].thu)) {
+                        weekCounter++;
+                    } else if (orderDaysByWeek.length === 0 && day === 1) {
+                        weekCounter = 1;
+                    }
+                    if (weekCounter > 5) break;
+                    if (!orderDaysByWeek[weekCounter -1]) {
+                         orderDaysByWeek[weekCounter -1] = { tue: null, thu: null, weekNum: weekCounter };
+                    }
+                }
+
+                let currentWeekData = orderDaysByWeek[weekCounter -1];
+                if (!currentWeekData) {
+                    if (weekCounter < 1) weekCounter = 1;
+                    if (weekCounter > 5) break;
+                    currentWeekData = { tue: null, thu: null, weekNum: weekCounter };
+                    orderDaysByWeek[weekCounter -1] = currentWeekData;
+                }
+
+                if (currentDate.getMonth() === month) {
+                    if (dayOfWeek === 2) {
+                        currentWeekData.tue = new Date(currentDate);
+                    } else if (dayOfWeek === 4) {
+                        currentWeekData.thu = new Date(currentDate);
+                    }
+                }
+            }
+
+            while (orderDaysByWeek.length < 5) {
+                 orderDaysByWeek.push({ tue: null, thu: null, weekNum: orderDaysByWeek.length + 1 });
+            }
+            return orderDaysByWeek.slice(0, 5);
+        }
+
+
+        function renderTableStructure() {
+            materialsTableHead.innerHTML = '';
+            const orderDays = getOrderDaysForMonth(currentYear, currentMonth);
+            renderTableHeader(orderDays);
+        }
+
+        function renderTableBody() {
+            materialsTableBody.innerHTML = '';
+            const monthKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+            let materials = materialsData[monthKey] || [];
+
+            if (currentSortColumn) {
+                materials = sortMaterials(materials, currentSortColumn, currentSortDirection);
+            }
+
+            const orderDays = getOrderDaysForMonth(currentYear, currentMonth);
+            const currentMonthLocks = monthColumnLockStatus[monthKey] || {};
+
+            if (materials.length === 0) {
+                materialsTable.classList.add('hidden');
+                noMaterialsMessage.classList.remove('hidden');
+            } else {
+                materialsTable.classList.remove('hidden');
+                noMaterialsMessage.classList.add('hidden');
+                materials.forEach((material) => {
+                    const materialRow = createMaterialRow(material, orderDays, currentMonthLocks);
+                    materialsTableBody.appendChild(materialRow);
+                });
+            }
+            updateSortIndicators();
+            adjustStickyColumns();
+        }
+
+        function renderTableHeader(orderDays) {
+            const headerRow = document.createElement('tr');
+            let headerHtml = `
+                <th scope="col" class="sticky-col-name week-divider-left px-3 py-2 text-center text-base sm:text-lg font-semibold sortable" data-sort-key="name" style="min-width: 180px; width: 180px;">資材名 <span class="sort-indicator"></span></th>
+                <th scope="col" class="sticky-col-stock week-divider-left px-3 py-2 text-center text-base sm:text-lg font-semibold sortable" data-sort-key="stock" style="min-width: 80px; width: 80px;">在庫 <span class="sort-indicator"></span></th>
+                <th scope="col" class="sticky-col-unit-price px-3 py-2 text-center text-xs sm:text-sm font-semibold" style="min-width: 70px;">単価</th>
+            `;
+
+            let previousWeekNum = 0;
+            const monthKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+            const currentMonthLocks = monthColumnLockStatus[monthKey] || {};
+
+            orderDays.forEach((weekDates, index) => {
+                const currentWeekNum = weekDates.weekNum;
+
+                if (weekDates.tue) {
+                    let tueClasses = "px-3 py-2 text-center text-xs sm:text-sm font-semibold";
+                    if (index === 0 || currentWeekNum !== previousWeekNum) {
+                        tueClasses += " week-divider-left";
+                    }
+                    const tueDatePart = `${weekDates.tue.getMonth() + 1}/${weekDates.tue.getDate()} (火)`;
+                    const lockKeyTue = `week${index}_tue_locked`;
+                    const isTueLocked = currentMonthLocks[lockKeyTue] || false;
+                    const tueHeader = `[${currentWeekNum}W]<br>${tueDatePart} 発注数 <input type="checkbox" class="header-lock-checkbox" data-lock-key="${lockKeyTue}" ${isTueLocked ? 'checked' : ''} title="この日の発注をロック">`;
+                    headerHtml += `<th scope="col" class="${tueClasses}">${tueHeader}</th>`;
+                }
+
+                if (weekDates.thu) {
+                    let thuClasses = "px-3 py-2 text-center text-xs sm:text-sm font-semibold";
+                    if (!weekDates.tue && (currentWeekNum !== previousWeekNum || index === 0)) {
+                        thuClasses += " week-divider-left";
+                    }
+                    const thuDatePart = `${weekDates.thu.getMonth() + 1}/${weekDates.thu.getDate()} (木)`;
+                    const lockKeyThu = `week${index}_thu_locked`;
+                    const isThuLocked = currentMonthLocks[lockKeyThu] || false;
+                    const thuHeader = `[${currentWeekNum}W]<br>${thuDatePart} 発注数 <input type="checkbox" class="header-lock-checkbox" data-lock-key="${lockKeyThu}" ${isThuLocked ? 'checked' : ''} title="この日の発注をロック">`;
+                    headerHtml += `<th scope="col" class="${thuClasses}">${thuHeader}</th>`;
+                }
+                if(weekDates.tue || weekDates.thu) {
+                    previousWeekNum = currentWeekNum;
+                }
+            });
+            headerHtml += `
+                <th scope="col" class="week-divider-left px-3 py-2 text-center text-xs sm:text-sm font-semibold" style="min-width: 100px;">当月<br>発注合計</th>
+                <th scope="col" class="week-divider-left px-3 py-2 text-center text-xs sm:text-sm font-semibold" style="min-width: 100px;">当月<br>発注金額</th>
+                <th scope="col" class="week-divider-left px-3 py-2 text-center text-xs sm:text-sm font-semibold">備考</th>
+                <th scope="col" class="week-divider-left px-3 py-2 text-center text-xs sm:text-sm font-semibold" style="min-width: 50px; width: 50px;">操作</th>
+            `;
+            headerRow.innerHTML = headerHtml;
+            materialsTableHead.appendChild(headerRow);
+
+            headerRow.querySelectorAll('.sortable').forEach(th => {
+                th.addEventListener('click', () => {
+                    const sortKey = th.dataset.sortKey;
+                    if (currentSortColumn === sortKey) {
+                        currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        currentSortColumn = sortKey;
+                        currentSortDirection = 'asc';
+                    }
+                    renderTableBody();
+                });
+            });
+            headerRow.querySelectorAll('.header-lock-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', (event) => handleHeaderLockChange(event.target));
+            });
+            adjustStickyColumns();
+        }
+
+        function updateSortIndicators() {
+            materialsTableHead.querySelectorAll('.sortable .sort-indicator').forEach(span => {
+                span.textContent = '';
+            });
+            if (currentSortColumn) {
+                const activeIndicator = materialsTableHead.querySelector(`.sortable[data-sort-key="${currentSortColumn}"] .sort-indicator`);
+                if (activeIndicator) {
+                    activeIndicator.textContent = currentSortDirection === 'asc' ? '▲' : '▼';
+                }
+            }
+        }
+
+        function updateMasterSortIndicators() {
+            if(materialMasterTableEl && materialMasterTableEl.tHead) {
+                materialMasterTableEl.tHead.querySelectorAll('th.sortable .sort-indicator').forEach(span => {
+                    span.textContent = '';
+                });
+                if (currentMasterSortColumn) {
+                    const activeTh = materialMasterTableEl.tHead.querySelector(`th.sortable[data-sort-key="${currentMasterSortColumn}"] .sort-indicator`);
+                    if (activeTh) {
+                        activeTh.textContent = currentMasterSortDirection === 'asc' ? '▲' : '▼';
+                    }
+                }
+            }
+        }
+
+
+        function sortMaterials(materials, column, direction) {
+            return [...materials].sort((a, b) => {
+                let valA = a[column];
+                let valB = b[column];
+
+                if (column === 'stock') {
+                    valA = Number(valA) || 0;
+                    valB = Number(valB) || 0;
+                } else if (column === 'name') {
+                    const masterA = materialMasterData[a.masterId];
+                    const masterB = materialMasterData[b.masterId];
+                    valA = masterA ? String(masterA.name).toLowerCase() : '';
+                    valB = masterB ? String(masterB.name).toLowerCase() : '';
+                }
+
+
+                let comparison = 0;
+                if (valA > valB) {
+                    comparison = 1;
+                } else if (valA < valB) {
+                    comparison = -1;
+                }
+                return direction === 'desc' ? comparison * -1 : comparison;
+            });
+        }
+
+        function addNewMaterialToTable() {
+            const monthKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+            if (!materialsData[monthKey]) { materialsData[monthKey] = []; }
+
+            const newMaterial = {
+                id: `material-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                masterId: "",
+                stock: '',
+                weeks: Array(5).fill(null).map(() => ({ tueOrder: '', thuOrder: ''})),
+                remarks: ''
+            };
+            materialsData[monthKey].push(newMaterial);
+            saveDataForCurrentMonth();
+            renderTableBody();
+            materialsTable.classList.remove('hidden');
+            noMaterialsMessage.classList.add('hidden');
+            adjustStickyColumns();
+            populateMonthSelect();
+            updateMonthDisplay();
+        }
+
+        function createMaterialRow(material, orderDays, currentMonthLocks) {
+            const row = document.createElement('tr');
+            row.dataset.materialId = material.id;
+
+            const deleteButtonId = `delete-btn-${material.id}`;
+            let materialTotalOrder = 0;
+            material.weeks.forEach(week => {
+                materialTotalOrder += Number(week.tueOrder) || 0;
+                materialTotalOrder += Number(week.thuOrder) || 0;
+            });
+
+            const masterEntry = materialMasterData[material.masterId] || { name: '(資材を選択)', unitPrice: 0 };
+            const unitPrice = parseFloat(masterEntry.unitPrice) || 0;
+            const totalOrderAmount = materialTotalOrder * unitPrice;
+
+
+            let cellsHtml = `
+                <td class="sticky-col-name px-3 py-1.5 text-xs sm:text-sm text-gray-500">
+                    <select data-field="masterId" class="material-name-select">
+                        <option value="">資材を選択...</option>`;
+            Object.values(materialMasterData).sort((a,b) => a.name.localeCompare(b.name, 'ja')).forEach(master => {
+                cellsHtml += `<option value="${master.id}" ${material.masterId === master.id ? 'selected' : ''}>${master.name}</option>`;
+            });
+            cellsHtml += `</select>
+                </td>
+                <td class="sticky-col-stock whitespace-nowrap px-3 py-1.5 text-xs sm:text-sm text-gray-500">
+                    <input type="number" data-field="stock" value="${material.stock || ''}" placeholder="月初在庫">
+                </td>
+                <td class="unit-price-cell sticky-col-unit-price whitespace-nowrap px-3 py-1.5 text-xs sm:text-sm text-gray-500">${unitPrice.toLocaleString()}</td>
+            `;
+            orderDays.forEach((weekDates, index) => {
+                const materialWeekData = material.weeks[index] || { tueOrder: '', thuOrder: ''};
+
+                if (weekDates.tue) {
+                    const lockKeyTue = `week${index}_tue_locked`;
+                    const tueLocked = currentMonthLocks[lockKeyTue] || false;
+                    cellsHtml += `
+                        <td class="whitespace-nowrap px-3 py-1.5 text-xs sm:text-sm text-gray-500">
+                            <div class="quantity-controls">
+                                <button type="button" class="quantity-btn increase-btn" data-week="${index}" data-day="tue" data-type="order" data-action="increase" ${tueLocked ? 'disabled' : ''}>+</button>
+                                <input type="number" data-week="${index}" data-day="tue" data-type="order" value="${materialWeekData.tueOrder || ''}" placeholder="発注数" ${tueLocked ? 'disabled' : ''}>
+                                <button type="button" class="quantity-btn decrease-btn" data-week="${index}" data-day="tue" data-type="order" data-action="decrease" ${tueLocked ? 'disabled' : ''}>-</button>
+                            </div>
+                        </td>`;
+                }
+                if (weekDates.thu) {
+                    const lockKeyThu = `week${index}_thu_locked`;
+                    const thuLocked = currentMonthLocks[lockKeyThu] || false;
+                    cellsHtml += `
+                        <td class="whitespace-nowrap px-3 py-1.5 text-xs sm:text-sm text-gray-500">
+                            <div class="quantity-controls">
+                                <button type="button" class="quantity-btn increase-btn" data-week="${index}" data-day="thu" data-type="order" data-action="increase" ${thuLocked ? 'disabled' : ''}>+</button>
+                                <input type="number" data-week="${index}" data-day="thu" data-type="order" value="${materialWeekData.thuOrder || ''}" placeholder="発注数" ${thuLocked ? 'disabled' : ''}>
+                                <button type="button" class="quantity-btn decrease-btn" data-week="${index}" data-day="thu" data-type="order" data-action="decrease" ${thuLocked ? 'disabled' : ''}>-</button>
+                            </div>
+                        </td>`;
+                }
+            });
+            cellsHtml += `
+                <td class="total-order-cell whitespace-nowrap px-3 py-1.5 text-xs sm:text-sm text-gray-700">${materialTotalOrder}</td>
+                <td class="total-order-amount-cell whitespace-nowrap px-3 py-1.5 text-xs sm:text-sm text-gray-700">${totalOrderAmount.toLocaleString()}</td>
+                <td class="whitespace-nowrap px-3 py-1.5 text-xs sm:text-sm text-gray-500 remarks-input-wrapper">
+                    <input type="text" data-field="remarks" value="${material.remarks || ''}" placeholder="特記事項">
+                </td>
+                <td class="whitespace-nowrap px-3 py-1.5 text-xs sm:text-sm text-gray-500 text-center">
+                    <button id="${deleteButtonId}" data-action="delete" class="text-red-500 hover:text-red-700 font-bold text-lg sm:text-xl px-2">×</button>
+                </td>
+            `;
+            row.innerHTML = cellsHtml;
+
+            const deleteButtonElement = row.querySelector(`#${deleteButtonId}`);
+            if (deleteButtonElement) {
+                deleteButtonElement.addEventListener('click', function() {
+                    handleDeleteMaterial(material.id);
+                });
+            }
+            return row;
+        }
+
+        function adjustStickyColumns() {
+            const nameHeader = document.querySelector('.sticky-table-header .sticky-col-name');
+            const stockHeader = document.querySelector('.sticky-table-header .sticky-col-stock');
+            const unitPriceHeader = document.querySelector('.sticky-table-header .sticky-col-unit-price');
+
+            let currentLeft = 0;
+            if (nameHeader) {
+                document.querySelectorAll('.sticky-col-name').forEach(el => {
+                    el.style.left = `${currentLeft}px`;
+                });
+                currentLeft += nameHeader.offsetWidth;
+            }
+            if (stockHeader) {
+                document.querySelectorAll('.sticky-col-stock').forEach(el => {
+                    el.style.left = `${currentLeft}px`;
+                });
+                currentLeft += stockHeader.offsetWidth;
+            }
+             if (unitPriceHeader) {
+                document.querySelectorAll('.sticky-col-unit-price').forEach(el => {
+                    el.style.left = `${currentLeft}px`;
+                });
+            }
+
+
+            const pageHeader = document.querySelector('.sticky-page-header');
+            const pageHeaderHeight = pageHeader ? pageHeader.offsetHeight : 0;
+
+            document.querySelectorAll('.sticky-table-header th').forEach(th => {
+                th.style.top = `0px`;
+            });
+
+            if (pageHeader) {
+                tableContainer.style.marginTop = `0.25rem`;
+                tableContainer.style.maxHeight = `calc(100vh - ${pageHeaderHeight}px - 1rem - 0.25rem)`;
+            } else {
+                tableContainer.style.marginTop = `0.5rem`;
+                tableContainer.style.maxHeight = `calc(100vh - 1rem)`;
+            }
+        }
+
+        function handleMaterialNameChange(selectElement) {
+            const rowElement = selectElement.closest('tr');
+            if (!rowElement || !rowElement.dataset.materialId) return;
+            const materialId = rowElement.dataset.materialId;
+            const newMasterId = selectElement.value;
+
+            const monthKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+            const material = materialsData[monthKey]?.find(m => m.id === materialId);
+
+            if (material) {
+                material.masterId = newMasterId;
+                saveDataForCurrentMonth();
+                renderTableBody();
+            }
+        }
+
+
+        function handleMaterialInputChange(event) {
+            const target = event.target;
+            if ((target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') && !target.classList.contains('remarks-floating-textarea')) {
+                const rowElement = target.closest('tr');
+                if (!rowElement || !rowElement.dataset.materialId) return;
+                const materialId = rowElement.dataset.materialId;
+                const monthKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+                const material = materialsData[monthKey]?.find(m => m.id === materialId);
+                if (!material) return;
+
+                const field = target.dataset.field;
+                const weekIndex = target.dataset.week;
+                const day = target.dataset.day;
+                const type = target.dataset.type;
+
+                if (field) {
+                    material[field] = target.value;
+                } else if (weekIndex !== undefined && day && type === 'order') {
+                    if (!material.weeks[weekIndex]) {
+                        material.weeks[weekIndex] = { tueOrder: '', thuOrder: '' };
+                    }
+                    material.weeks[weekIndex][`${day}Order`] = target.value;
+                }
+                saveDataForCurrentMonth();
+
+                let materialTotalOrder = 0;
+                material.weeks.forEach(week => {
+                    materialTotalOrder += Number(week.tueOrder) || 0;
+                    materialTotalOrder += Number(week.thuOrder) || 0;
+                });
+                const masterEntry = materialMasterData[material.masterId] || { unitPrice: 0 };
+                const unitPrice = parseFloat(masterEntry.unitPrice) || 0;
+                const totalOrderAmount = materialTotalOrder * unitPrice;
+
+                const totalCell = rowElement.querySelector('.total-order-cell');
+                if (totalCell) totalCell.textContent = materialTotalOrder;
+
+                const totalAmountCell = rowElement.querySelector('.total-order-amount-cell');
+                if (totalAmountCell) totalAmountCell.textContent = totalOrderAmount.toLocaleString();
+            }
+        }
+
+        function handleHeaderLockChange(checkbox) {
+            const lockKey = checkbox.dataset.lockKey;
+            const isLocked = checkbox.checked;
+            const monthKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+
+            if (!monthColumnLockStatus[monthKey]) {
+                monthColumnLockStatus[monthKey] = {};
+            }
+
+            if (!isLocked) {
+                showCustomConfirm(`発注数のロックを解除しますか？`, (confirmed) => {
+                    if (confirmed) {
+                        monthColumnLockStatus[monthKey][lockKey] = false;
+                        saveMonthLockStatus();
+                        renderTableBody();
+                        renderTableStructure();
+                    } else {
+                        checkbox.checked = true;
+                    }
+                });
+            } else {
+                monthColumnLockStatus[monthKey][lockKey] = true;
+                saveMonthLockStatus();
+                renderTableBody();
+            }
+        }
+
+
+        function handleQuantityButtonClick(quantityButton) {
+            if (!quantityButton || quantityButton.disabled) return;
+            const action = quantityButton.dataset.action;
+            let inputField;
+            if (action === 'increase') {
+                inputField = quantityButton.nextElementSibling;
+            } else {
+                inputField = quantityButton.previousElementSibling;
+            }
+
+            if (inputField && inputField.tagName === 'INPUT' && !inputField.disabled) {
+                let currentValue = parseInt(inputField.value, 10) || 0;
+                if (action === 'increase') { currentValue += 500; }
+                else if (action === 'decrease') { currentValue = Math.max(0, currentValue - 500); }
+                inputField.value = currentValue;
+                const inputEvent = new Event('input', { bubbles: true });
+                inputField.dispatchEvent(inputEvent);
+            }
+        }
+
+        function handleDeleteMaterial(materialIdToDelete) {
+            const monthKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+            if (materialsData[monthKey]) {
+                materialsData[monthKey] = materialsData[monthKey].filter(m => m.id !== materialIdToDelete);
+                saveDataForCurrentMonth();
+                renderTableBody();
+                if (materialsData[monthKey].length === 0) {
+                    materialsTable.classList.add('hidden');
+                    noMaterialsMessage.classList.remove('hidden');
+                }
+            }
+        }
+
+        function handleRemarksFocus(event) {
+            const target = event.target;
+            if (target.matches('input[data-field="remarks"]')) {
+                if (currentFloatingTextarea) {
+                    closeFloatingRemarksTextarea(true);
+                }
+                originalRemarksInputForFloating = target;
+                currentFloatingTextarea = document.createElement('textarea');
+                currentFloatingTextarea.className = 'remarks-floating-textarea';
+                currentFloatingTextarea.value = originalRemarksInputForFloating.value;
+                const rect = originalRemarksInputForFloating.getBoundingClientRect();
+                currentFloatingTextarea.style.top = `${rect.bottom + 2}px`;
+                currentFloatingTextarea.style.left = `${rect.left}px`;
+                currentFloatingTextarea.style.width = `${Math.max(rect.width, 250)}px`;
+                currentFloatingTextarea.style.height = `100px`;
+                document.body.appendChild(currentFloatingTextarea);
+                currentFloatingTextarea.focus();
+                currentFloatingTextarea.select();
+                currentFloatingTextarea.addEventListener('blur', () => closeFloatingRemarksTextarea(true));
+                currentFloatingTextarea.addEventListener('input', () => {
+                    if (originalRemarksInputForFloating) {
+                        originalRemarksInputForFloating.value = currentFloatingTextarea.value;
+                        const inputEvent = new Event('input', { bubbles: true });
+                        originalRemarksInputForFloating.dispatchEvent(inputEvent);
+                    }
+                });
+            }
+        }
+
+        function closeFloatingRemarksTextarea(saveValue = false) {
+            if (currentFloatingTextarea) {
+                if (saveValue && originalRemarksInputForFloating) {
+                    originalRemarksInputForFloating.value = currentFloatingTextarea.value;
+                    const event = new Event('input', { bubbles: true, cancelable: true });
+                    originalRemarksInputForFloating.dispatchEvent(event);
+                }
+                currentFloatingTextarea.remove();
+                currentFloatingTextarea = null;
+                originalRemarksInputForFloating = null;
+            }
+        }
+
+        function handleMaterialNameClick(textareaElement, clickEvent) {
+            if (currentMaterialNamePopup) {
+                closeMaterialNamePopup();
+            }
+            const text = textareaElement.value;
+            if (!text.trim()) return;
+
+            const popup = document.createElement('div');
+            popup.className = 'material-name-popup';
+            popup.textContent = text;
+
+            document.body.appendChild(popup);
+
+            const rect = textareaElement.getBoundingClientRect();
+            let popupTop = rect.top - popup.offsetHeight - 5;
+            let popupLeft = rect.left;
+
+            if (popupTop < 0) {
+                popupTop = rect.bottom + 5;
+            }
+            if (popupLeft + popup.offsetWidth > window.innerWidth) {
+                popupLeft = window.innerWidth - popup.offsetWidth - 5;
+            }
+            if (popupLeft < 0) {
+                popupLeft = 5;
+            }
+
+            popup.style.top = `${popupTop}px`;
+            popup.style.left = `${popupLeft}px`;
+
+            currentMaterialNamePopup = popup;
+            if (clickEvent) {
+                clickEvent.stopPropagation();
+            }
+        }
+
+        function closeMaterialNamePopup() {
+            if (currentMaterialNamePopup) {
+                currentMaterialNamePopup.remove();
+                currentMaterialNamePopup = null;
+            }
+        }
+
+        function saveDataForCurrentMonth() {
+            localStorage.setItem('materialManagementData', JSON.stringify(materialsData));
+        }
+        function saveMonthLockStatus() {
+            localStorage.setItem('monthColumnLockStatus', JSON.stringify(monthColumnLockStatus));
+        }
+        function saveMaterialMasterData() {
+            localStorage.setItem('materialMasterStore', JSON.stringify(materialMasterData));
+        }
+
+
+        function loadAllData() {
+            const data = localStorage.getItem('materialManagementData');
+            try {
+                return data ? JSON.parse(data) : {};
+            } catch (error) {
+                console.error("[LOAD_DATA] Error parsing materialsData from localStorage:", error);
+                return {};
+            }
+        }
+        function loadMonthLockStatus() {
+            const data = localStorage.getItem('monthColumnLockStatus');
+            try {
+                return data ? JSON.parse(data) : {};
+            } catch (error) {
+                console.error("[LOAD_DATA] Error parsing monthColumnLockStatus from localStorage:", error);
+                return {};
+            }
+        }
+        function loadMaterialMasterData() {
+            const data = localStorage.getItem('materialMasterStore');
+            try {
+                return data ? JSON.parse(data) : {};
+            } catch (error) {
+                console.error("[LOAD_DATA] Error parsing materialMasterStore from localStorage:", error);
+                return {};
+            }
+        }
+
+        // --- 資材マスタ関連 ---
+        function renderMaterialMasterTable() {
+            materialMasterTableBodyEl.innerHTML = '';
+            const masterDataArray = Object.values(materialMasterData);
+
+            if (currentMasterSortColumn) {
+                masterDataArray.sort((a, b) => {
+                    let valA = a[currentMasterSortColumn];
+                    let valB = b[currentMasterSortColumn];
+                    if (currentMasterSortColumn === 'unitPrice' || currentMasterSortColumn === 'minLot') {
+                        valA = Number(valA) || 0;
+                        valB = Number(valB) || 0;
+                    } else {
+                        valA = String(valA || '').toLowerCase();
+                        valB = String(valB || '').toLowerCase();
+                    }
+                    let comparison = 0;
+                    if (valA > valB) comparison = 1;
+                    else if (valA < valB) comparison = -1;
+                    return currentMasterSortDirection === 'desc' ? comparison * -1 : comparison;
+                });
+            } else {
+                 masterDataArray.sort((a,b) => (a.name || '').localeCompare(b.name || '', 'ja'));
+            }
+
+
+            masterDataArray.forEach(master => {
+                const row = materialMasterTableBodyEl.insertRow();
+                const checkboxCell = row.insertCell();
+                checkboxCell.classList.add('master-checkbox-cell');
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.classList.add('master-delete-checkbox', 'mx-auto', 'block');
+                checkbox.dataset.masterId = master.id;
+                checkboxCell.appendChild(checkbox);
+
+                const nameCell = row.insertCell();
+                nameCell.textContent = master.name;
+                nameCell.classList.add('master-name-cell');
+
+                const unitPriceCell = row.insertCell();
+                unitPriceCell.textContent = master.unitPrice;
+                unitPriceCell.classList.add('master-unit-price-cell');
+
+                const minLotCell = row.insertCell();
+                minLotCell.textContent = master.minLot;
+                minLotCell.classList.add('master-min-lot-cell');
+
+                const unitCell = row.insertCell();
+                unitCell.textContent = master.unit;
+                unitCell.classList.add('master-unit-cell');
+
+                const orderCompanyCell = row.insertCell();
+                orderCompanyCell.textContent = master.orderCompany || '';
+                orderCompanyCell.classList.add('master-order-company-cell');
+
+                const actionsCell = row.insertCell();
+                actionsCell.classList.add('master-actions-cell');
+                const editBtn = document.createElement('button');
+                editBtn.textContent = '編集';
+                editBtn.classList.add('px-2', 'py-1', 'bg-yellow-500', 'text-white', 'rounded', 'hover:bg-yellow-600', 'text-xs');
+                editBtn.onclick = () => openEditMasterModal(master.id);
+                actionsCell.appendChild(editBtn);
+            });
+            updateMasterSortIndicators();
+        }
+
+        function clearInlineErrors() {
+            if (newMasterNameError) newMasterNameError.textContent = '';
+            if (newMasterUnitPriceError) newMasterUnitPriceError.textContent = '';
+            if (newMasterMinLotError) newMasterMinLotError.textContent = '';
+            // 他の入力フィールドのエラー表示用DOM要素があれば、それらもクリア
+            // 例: document.getElementById('newMasterUnitError').textContent = '';
+
+            if (editMasterNameError) editMasterNameError.textContent = '';
+            if (editMasterUnitPriceError) editMasterUnitPriceError.textContent = '';
+            if (editMasterMinLotError) editMasterMinLotError.textContent = '';
+            // 他の編集モーダル内のエラー表示用DOM要素もクリア
+        }
+
+        function handleAddMasterMaterial() {
+            clearInlineErrors();
+            let isValid = true;
+            const name = newMasterNameInput.value.trim();
+            const unitPriceStr = newMasterUnitPriceInput.value.trim();
+            const minLotStr = newMasterMinLotInput.value.trim();
+            const unit = newMasterUnitInput.value.trim();
+            const orderCompany = newMasterOrderCompanyInput.value.trim();
+
+            if (!name) {
+                newMasterNameError.textContent = "資材名は必須です。";
+                isValid = false;
+            } else if (Object.values(materialMasterData).some(m => m.name === name)) {
+                newMasterNameError.textContent = "同じ名前の資材が既に存在します。";
+                isValid = false;
+            }
+
+            const unitPrice = parseFloat(unitPriceStr);
+            if (unitPriceStr && isNaN(unitPrice)) { // 値があり、かつ数値でない場合
+                newMasterUnitPriceError.textContent = "単価は数値で入力してください。";
+                isValid = false;
+            }
+
+            const minLot = parseInt(minLotStr);
+             if (minLotStr && (isNaN(minLot) || !Number.isInteger(parseFloat(minLotStr)))) {
+                newMasterMinLotError.textContent = "最小ロットは整数で入力してください。";
+                isValid = false;
+            }
+
+
+            if (!isValid) return;
+
+            const newId = `master-${Date.now()}-${Math.random().toString(36).substr(2,5)}`;
+            materialMasterData[newId] = { id: newId, name, unitPrice: unitPrice || 0, unit, minLot: minLot || 0, orderCompany };
+            saveMaterialMasterData();
+            renderMaterialMasterTable();
+            renderTableBody();
+            showToast(`資材「${name}」を登録しました。`, 'success');
+            newMasterNameInput.value = '';
+            newMasterUnitPriceInput.value = '';
+            newMasterUnitInput.value = '';
+            newMasterMinLotInput.value = '';
+            newMasterOrderCompanyInput.value = '';
+            console.log(`[MASTER_ADD] Added: ${name}`);
+        }
+
+        function openEditMasterModal(masterId) {
+            clearInlineErrors();
+            const master = materialMasterData[masterId];
+            if (!master) return;
+            editMasterIdInput.value = master.id;
+            editMasterNameInput.value = master.name;
+            editMasterUnitPriceInput.value = master.unitPrice;
+            editMasterMinLotInput.value = master.minLot;
+            editMasterUnitInput.value = master.unit;
+            editMasterOrderCompanyInput.value = master.orderCompany || '';
+            editMasterModal.style.display = "block";
+        }
+
+        function closeEditMasterModal() {
+            editMasterModal.style.display = "none";
+        }
+
+        function handleSaveMasterEdit() {
+            clearInlineErrors();
+            let isValid = true;
+            const id = editMasterIdInput.value;
+            const name = editMasterNameInput.value.trim();
+            const unitPriceStr = editMasterUnitPriceInput.value.trim();
+            const minLotStr = editMasterMinLotInput.value.trim();
+            const unit = editMasterUnitInput.value.trim();
+            const orderCompany = editMasterOrderCompanyInput.value.trim();
+
+            if (!name) {
+                editMasterNameError.textContent = "資材名は必須です。";
+                isValid = false;
+            } else if (Object.values(materialMasterData).some(m => m.id !== id && m.name === name)) {
+                editMasterNameError.textContent = "同じ名前の資材が既に存在します。";
+                isValid = false;
+            }
+
+            const unitPrice = parseFloat(unitPriceStr);
+            if (unitPriceStr && isNaN(unitPrice)) {
+                editMasterUnitPriceError.textContent = "単価は数値で入力してください。";
+                isValid = false;
+            }
+
+            const minLot = parseInt(minLotStr);
+             if (minLotStr && (isNaN(minLot) || !Number.isInteger(parseFloat(minLotStr)))) {
+                editMasterMinLotError.textContent = "最小ロットは整数で入力してください。";
+                isValid = false;
+            }
+
+            if (!isValid) return;
+
+
+            showCustomConfirm(`資材マスタの「${name}」の更新内容を保存しますか？\n（この資材を使用している発注表のデータも影響を受けます）`, (confirmed) => {
+                if (confirmed) {
+                    if (materialMasterData[id]) {
+                        materialMasterData[id] = { id, name, unitPrice: unitPrice || 0, unit, minLot: minLot || 0, orderCompany };
+                        saveMaterialMasterData();
+                        renderMaterialMasterTable();
+                        renderTableBody();
+                        closeEditMasterModal();
+                        showToast(`資材「${name}」を更新しました。`, 'success');
+                        console.log(`[MASTER_EDIT] Edited: ${name}`);
+                    }
+                }
+            });
+        }
+
+        function handleDeleteSelectedMasterMaterials() {
+            const selectedIds = [];
+            materialMasterTableBodyEl.querySelectorAll('.master-delete-checkbox:checked').forEach(checkbox => {
+                selectedIds.push(checkbox.dataset.masterId);
+            });
+
+            if (selectedIds.length === 0) {
+                showInfoDialog("情報", "削除する資材を選択してください。");
+                return;
+            }
+
+            const confirmMessageText = selectedIds.length === 1 ?
+                `資材マスタから「${materialMasterData[selectedIds[0]].name}」を削除しますか？\n（この資材を使用している発注表のデータも影響を受けます）` :
+                `資材マスタから選択された${selectedIds.length}件の資材を削除しますか？\n（これらの資材を使用している発注表のデータも影響を受けます）`;
+
+            showCustomConfirm(confirmMessageText, (confirmed) => {
+                if (confirmed) {
+                    let deletedCount = 0;
+                    selectedIds.forEach(masterId => {
+                        if (materialMasterData[masterId]) {
+                            delete materialMasterData[masterId];
+                            deletedCount++;
+                            Object.keys(materialsData).forEach(monthKey => {
+                                materialsData[monthKey] = materialsData[monthKey].map(item => {
+                                    if (item.masterId === masterId) {
+                                        return { ...item, masterId: null };
+                                    }
+                                    return item;
+                                });
+                            });
+                        }
+                    });
+                    if (deletedCount > 0) {
+                        saveMaterialMasterData();
+                        saveAllData();
+                        renderMaterialMasterTable();
+                        renderTableBody();
+                        showToast(`${deletedCount}件の資材マスタを削除しました。`, 'success');
+                        console.log(`[MASTER_DELETE] Deleted ${deletedCount} items.`);
+                        const selectAllCheckbox = materialMasterTableEl.tHead.querySelector('#masterSelectAllCheckbox');
+                        if (selectAllCheckbox) {
+                            selectAllCheckbox.checked = false;
+                        }
+                    }
+                }
+            });
+        }
+
+
+        // --- CSVインポート・エクスポート機能 ---
+        function exportMasterDataToCsv() {
+            console.log("[EXPORT_MASTER_CSV] Exporting master data.");
+            if (Object.keys(materialMasterData).length === 0) {
+                showInfoDialog("エクスポートエラー", "エクスポートする資材マスタデータがありません。");
+                return;
+            }
+
+            let csvContent = "\uFEFF";
+            const headers = ["資材ID", "資材名", "単価", "最小ロット", "単位", "発注会社"];
+            csvContent += headers.map(h => `"${String(h).replace(/"/g, '""')}"`).join(",") + "\r\n";
+
+            Object.values(materialMasterData).forEach(master => {
+                const row = [
+                    `"${master.id ? String(master.id).replace(/"/g, '""') : ''}"`,
+                    `"${master.name ? String(master.name).replace(/"/g, '""') : ''}"`,
+                    `"${master.unitPrice !== undefined ? String(master.unitPrice).replace(/"/g, '""') : ''}"`,
+                    `"${master.minLot !== undefined ? String(master.minLot).replace(/"/g, '""') : ''}"`,
+                    `"${master.unit ? String(master.unit).replace(/"/g, '""') : ''}"`,
+                    `"${master.orderCompany ? String(master.orderCompany).replace(/"/g, '""') : ''}"`
+                ];
+                csvContent += row.join(",") + "\r\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", "資材マスタ一覧.csv");
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                showToast("資材マスタをCSVエクスポートしました。", "success");
+            } else {
+                showInfoDialog("エクスポートエラー", "お使いのブラウザはファイルの直接ダウンロードをサポートしていません。");
+            }
+            console.log("[EXPORT_MASTER_CSV] Master data export complete.");
+        }
+
+        function handleMasterFileUpload(event) {
+            console.log("[IMPORT_MASTER_CSV] Master file selected.");
+            const file = event.target.files[0];
+            if (file) {
+                if (file.type !== "text/csv" && !file.name.toLowerCase().endsWith(".csv")) {
+                    showInfoDialog("インポートエラー", "CSVファイルを選択してください。", true);
+                    masterCsvFileInput.value = '';
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const csvData = e.target.result;
+                        parseAndImportMasterCsv(csvData);
+                    } catch (error) {
+                        console.error("[IMPORT_MASTER_CSV] Error reading or parsing master file:", error);
+                        showInfoDialog("インポートエラー", `資材マスタファイルの読み込みまたは解析中にエラーが発生しました。\n${error.message}`, true);
+                    }
+                };
+                reader.onerror = function() {
+                    console.error("[IMPORT_MASTER_CSV] FileReader error:", reader.error);
+                    showInfoDialog("インポートエラー", "資材マスタファイルの読み込み中にエラーが発生しました。", true);
+                };
+                reader.readAsText(file);
+            }
+            masterCsvFileInput.value = '';
+        }
+
+        function parseCsvLine(line) {
+            const values = [];
+            let inQuotes = false;
+            let currentValue = '';
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') {
+                    if (inQuotes && i + 1 < line.length && line[i+1] === '"') {
+                        currentValue += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    values.push(currentValue);
+                    currentValue = '';
+                } else {
+                    currentValue += char;
+                }
+            }
+            values.push(currentValue);
+            return values.map(val => {
+                if (val.startsWith('"') && val.endsWith('"')) {
+                    return val.substring(1, val.length - 1).replace(/""/g, '"');
+                }
+                return val;
+            });
+        }
+
+
+        function parseAndImportMasterCsv(csvData) {
+            console.log("[PARSE_MASTER_CSV] Parsing master CSV data.");
+            const lines = csvData.split(/\r\n|\n/).filter(line => line.trim() !== '');
+            if (lines.length < 1) {
+                showInfoDialog("インポートエラー", "資材マスタCSVファイルに処理可能なデータがありません（ヘッダー行のみ、または空のファイル）。", true);
+                return;
+            }
+
+            const headerLine = lines[0].startsWith('\uFEFF') ? lines[0].substring(1) : lines[0];
+            const csvHeaders = parseCsvLine(headerLine).map(h => h.trim());
+
+            const requiredHeaders = ["資材名", "単価"];
+            const missingHeaders = requiredHeaders.filter(rh => !csvHeaders.includes(rh));
+            if (missingHeaders.length > 0) {
+                showInfoDialog("インポートエラー", `CSVファイルのヘッダーが正しくありません。必須列が見つかりません: ${missingHeaders.join(', ')}`, true);
+                return;
+            }
+
+            const idIndex = csvHeaders.findIndex(h => h === "資材ID");
+            const nameIndex = csvHeaders.findIndex(h => h === "資材名");
+            const unitPriceIndex = csvHeaders.findIndex(h => h === "単価");
+            const minLotIndex = csvHeaders.findIndex(h => h === "最小ロット");
+            const unitIndex = csvHeaders.findIndex(h => h === "単位");
+            const orderCompanyIndex = csvHeaders.findIndex(h => h === "発注会社");
+
+            let importedCount = 0;
+            let updatedCount = 0;
+            let addedCount = 0;
+            const errorMessages = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i];
+                if (!line.trim()) continue;
+                const values = parseCsvLine(line);
+                const currentLineNum = i + 1;
+
+                const csvMasterName = values[nameIndex]?.trim() || '';
+                if (!csvMasterName) {
+                    errorMessages.push(`${currentLineNum}行目: 資材名が空です。スキップしました。`);
+                    continue;
+                }
+
+                const csvUnitPriceStr = values[unitPriceIndex]?.trim();
+                const csvUnitPrice = parseFloat(csvUnitPriceStr);
+                if (csvUnitPriceStr && isNaN(csvUnitPrice)) {
+                    errorMessages.push(`${currentLineNum}行目 (資材名: ${csvMasterName}): 単価「${csvUnitPriceStr}」は数値である必要があります。スキップしました。`);
+                    continue;
+                }
+
+                const csvMinLotStr = minLotIndex !== -1 ? values[minLotIndex]?.trim() : '';
+                const csvMinLot = parseInt(csvMinLotStr);
+                if (csvMinLotStr && (isNaN(csvMinLot) || !Number.isInteger(parseFloat(csvMinLotStr)))) {
+                    errorMessages.push(`${currentLineNum}行目 (資材名: ${csvMasterName}): 最小ロット「${csvMinLotStr}」は整数である必要があります。スキップしました。`);
+                    continue;
+                }
+
+                const csvUnit = unitIndex !== -1 ? (values[unitIndex]?.trim() || '') : '';
+                const csvOrderCompany = orderCompanyIndex !== -1 ? (values[orderCompanyIndex]?.trim() || '') : '';
+                const csvMasterId = idIndex !== -1 ? (values[idIndex]?.trim() || null) : null;
+
+                let existingMasterId = csvMasterId ? (materialMasterData[csvMasterId] ? csvMasterId : null) : null;
+                if (!existingMasterId) {
+                    existingMasterId = Object.keys(materialMasterData).find(id => materialMasterData[id].name === csvMasterName);
+                }
+
+                if (existingMasterId) {
+                    materialMasterData[existingMasterId].name = csvMasterName;
+                    materialMasterData[existingMasterId].unitPrice = csvUnitPrice || 0;
+                    materialMasterData[existingMasterId].minLot = csvMinLot || 0;
+                    materialMasterData[existingMasterId].unit = csvUnit;
+                    materialMasterData[existingMasterId].orderCompany = csvOrderCompany;
+                    updatedCount++;
+                } else {
+                    const newId = `master-${Date.now()}-${Math.random().toString(36).substr(2,5)}-imported-${i}`;
+                    materialMasterData[newId] = {
+                        id: newId, name: csvMasterName, unitPrice: csvUnitPrice || 0,
+                        minLot: csvMinLot || 0, unit: csvUnit, orderCompany: csvOrderCompany
+                    };
+                    addedCount++;
+                }
+                importedCount++;
+            }
+
+            if (importedCount > 0) {
+                saveMaterialMasterData();
+                renderMaterialMasterTable();
+                renderTableBody();
+                let successMsg = `${importedCount}件の資材マスタデータが処理されました。\n(新規追加: ${addedCount}件, 更新: ${updatedCount}件)`;
+                if (errorMessages.length > 0) {
+                    successMsg += `\n\n以下のエラー/警告があります:\n` + errorMessages.join('\n');
+                    showInfoDialog("インポート結果（一部エラーあり）", successMsg, true);
+                } else {
+                    showToast(successMsg.replace(/\n/g, ' '), 'success', 5000);
+                }
+            } else if (errorMessages.length > 0) {
+                 showInfoDialog("インポートエラー", "処理可能なデータがありませんでした。以下のエラーを確認してください:\n" + errorMessages.join('\n'), true);
+            } else {
+                showInfoDialog("インポート情報", "インポートできる有効な資材マスタデータが見つかりませんでした。ファイルの内容を確認してください。");
+            }
+        }
+
+
+        function exportDataToCsv() {
+            console.log("[EXPORT_CSV] Exporting data.");
+            const scope = exportScopeSelect.value;
+            let materialsToExport = [];
+            let fileName = "発注データ";
+            const fixedOrderHeaders = [];
+            for (let i = 1; i <= 5; i++) {
+                fixedOrderHeaders.push(`第${i}火曜 発注数`);
+                fixedOrderHeaders.push(`第${i}木曜 発注数`);
+            }
+
+            if (scope === "currentMonth") {
+                const monthKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+                materialsToExport = materialsData[monthKey] ? materialsData[monthKey].map(m => ({...m, yearMonth: monthKey })) : [];
+                fileName += `_${currentYear}年${currentMonth + 1}月.csv`;
+            } else if (scope === "currentYear") {
+                fileName += `_${currentYear}年.csv`;
+                for (let i = 0; i < 12; i++) {
+                    const monthKey = `${currentYear}-${String(i + 1).padStart(2, '0')}`;
+                    if (materialsData[monthKey]) {
+                        materialsData[monthKey].forEach(m => {
+                            const masterEntry = materialMasterData[m.masterId] || {name: '(マスタ未登録)', unitPrice: 0};
+                            materialsToExport.push({...m, name: masterEntry.name, unitPrice: masterEntry.unitPrice, yearMonth: monthKey})
+                        });
+                    }
+                }
+            } else if (scope === "all") {
+                fileName += `_全期間.csv`;
+                Object.keys(materialsData).sort().forEach(monthKey => {
+                    materialsData[monthKey].forEach(m => {
+                         const masterEntry = materialMasterData[m.masterId] || {name: '(マスタ未登録)', unitPrice: 0};
+                        materialsToExport.push({...m, name: masterEntry.name, unitPrice: masterEntry.unitPrice, yearMonth: monthKey})
+                    });
+                });
+            }
+
+            if (materialsToExport.length === 0) {
+                showInfoDialog("エクスポートエラー", "エクスポートする発注データがありません。");
+                return;
+            }
+
+            let csvContent = "\uFEFF";
+            const headers = ["年月", "資材名", "在庫", "単価", ...fixedOrderHeaders, "備考"];
+            csvContent += headers.map(h => `"${String(h).replace(/"/g, '""')}"`).join(",") + "\r\n";
+
+            materialsToExport.forEach(material => {
+                const masterInfo = materialMasterData[material.masterId] || {unitPrice: 0};
+                const row = [
+                    `"${material.yearMonth.replace(/"/g, '""')}"`,
+                    `"${(materialMasterData[material.masterId]?.name || material.name || '').replace(/"/g, '""')}"`,
+                    `"${String(material.stock || '').replace(/"/g, '""')}"`,
+                    `"${String(masterInfo.unitPrice).replace(/"/g, '""')}"`
+                ];
+                for (let i = 0; i < 5; i++) {
+                    row.push(`"${String(material.weeks[i]?.tueOrder || '').replace(/"/g, '""')}"`);
+                    row.push(`"${String(material.weeks[i]?.thuOrder || '').replace(/"/g, '""')}"`);
+                }
+                row.push(`"${(material.remarks || '').replace(/"/g, '""')}"`);
+                csvContent += row.join(",") + "\r\n";
+            });
+
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", fileName);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                showToast("発注データをCSVエクスポートしました。", "success");
+            } else {
+                showInfoDialog("エクスポートエラー", "お使いのブラウザはファイルの直接ダウンロードをサポートしていません。");
+            }
+            console.log("[EXPORT_CSV] Export complete for scope:", scope);
+        }
+
+        function handleFileUpload(event) { // 発注データのインポート
+            console.log("[IMPORT_CSV] File selected.");
+            const file = event.target.files[0];
+            if (file) {
+                 if (file.type !== "text/csv" && !file.name.toLowerCase().endsWith(".csv")) {
+                    showInfoDialog("インポートエラー", "CSVファイルを選択してください。", true);
+                    csvFileInput.value = '';
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const csvData = e.target.result;
+                        parseAndImportCsv(csvData);
+                    } catch (error) {
+                        console.error("[IMPORT_CSV] Error reading or parsing file:", error);
+                        showInfoDialog("インポートエラー", `ファイルの読み込みまたは解析中にエラーが発生しました。\n${error.message}`, true);
+                    }
+                };
+                reader.onerror = function() {
+                    console.error("[IMPORT_CSV] FileReader error:", reader.error);
+                    showInfoDialog("インポートエラー", "ファイルの読み込み中にエラーが発生しました。", true);
+                };
+                reader.readAsText(file);
+            }
+            csvFileInput.value = '';
+        }
+
+        function parseAndImportCsv(csvData) {
+            console.log("[PARSE_CSV] Parsing CSV data.");
+            let firstProcessedMonthKey = null; // ★ 修正: インポートされた最初の有効な年月を格納する変数
+            const lines = csvData.split(/\r\n|\n/).filter(line => line.trim() !== '');
+            if (lines.length < 1) {
+                showInfoDialog("インポートエラー", "発注CSVファイルに処理可能なデータがありません（ヘッダー行のみ、または空のファイル）。", true);
+                return;
+            }
+
+            const headerLine = lines[0].startsWith('\uFEFF') ? lines[0].substring(1) : lines[0];
+            const csvHeaders = parseCsvLine(headerLine).map(h => h.trim());
+            console.log("[PARSE_CSV] CSV Headers:", csvHeaders);
+
+            const requiredHeaders = ["年月", "資材名", "在庫"];
+            const missingHeaders = requiredHeaders.filter(rh => !csvHeaders.includes(rh));
+            if (missingHeaders.length > 0) {
+                showInfoDialog("インポートエラー", `CSVファイルのヘッダーが正しくありません。必須列が見つかりません: ${missingHeaders.join(', ')}`, true);
+                return;
+            }
+
+
+            const yearMonthIndex = csvHeaders.findIndex(h => h === "年月");
+            const materialNameIndex = csvHeaders.findIndex(h => h === "資材名");
+            const stockIndex = csvHeaders.findIndex(h => h === "在庫");
+            const remarksIndex = csvHeaders.findIndex(h => h === "備考");
+
+            const orderHeaderIndices = [];
+            for (let i = 1; i <= 5; i++) {
+                orderHeaderIndices.push({
+                    tueOrder: csvHeaders.findIndex(h => h === `第${i}火曜 発注数`),
+                    thuOrder: csvHeaders.findIndex(h => h === `第${i}木曜 発注数`),
+                });
+            }
+
+            let importedCount = 0;
+            let updatedCount = 0;
+            let addedCount = 0;
+            let masterAddedCount = 0;
+            const errorMessages = [];
+
+
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i];
+                if (!line.trim()) continue;
+
+                const values = parseCsvLine(line);
+                const currentLineNum = i + 1;
+
+                const yearMonthStr = values[yearMonthIndex]?.trim() || '';
+                if (!yearMonthStr || !/^\d{4}-\d{1,2}$/.test(yearMonthStr)) {
+                    errorMessages.push(`${currentLineNum}行目: 年月「${yearMonthStr}」の形式が不正です (YYYY-MM)。スキップしました。`);
+                    continue;
+                }
+                const [year, monthNum] = yearMonthStr.split('-').map(Number);
+                const monthKey = `${year}-${String(monthNum).padStart(2, '0')}`;
+
+                if (firstProcessedMonthKey === null) { // ★ 修正: 最初に処理された有効な monthKey を記録
+                    firstProcessedMonthKey = monthKey;
+                }
+
+
+                if (!materialsData[monthKey]) {
+                    materialsData[monthKey] = [];
+                }
+
+                const materialNameFromCsv = values[materialNameIndex]?.trim() || '';
+                if (!materialNameFromCsv) {
+                     errorMessages.push(`${currentLineNum}行目: 資材名が空です。スキップしました。`);
+                    continue;
+                }
+
+
+                let masterId = Object.keys(materialMasterData).find(id => materialMasterData[id].name === materialNameFromCsv);
+                if (!masterId) {
+                    masterId = `master-${Date.now()}-${Math.random().toString(36).substr(2, 5)}-imported-${i}`;
+                    const unitPriceFromCsv = parseFloat(values[csvHeaders.findIndex(h => h === "単価")]?.trim()) || 0;
+                    materialMasterData[masterId] = {
+                        id: masterId, name: materialNameFromCsv, unitPrice: unitPriceFromCsv,
+                        unit: '', minLot: 0, orderCompany: '' };
+                    masterAddedCount++;
+                    errorMessages.push(`情報: 資材マスタに「${materialNameFromCsv}」を新規登録しました (単価: ${unitPriceFromCsv || 0})。`);
+                }
+
+
+                const existingMaterialIndex = materialsData[monthKey].findIndex(m => m.masterId === masterId);
+
+                let targetMaterial;
+                if (existingMaterialIndex !== -1) {
+                    targetMaterial = materialsData[monthKey][existingMaterialIndex];
+                    updatedCount++;
+                } else {
+                    targetMaterial = {
+                        id: `material-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-imported-${i}`,
+                        masterId: masterId,
+                        weeks: Array(5).fill(null).map(() => ({ tueOrder: '', thuOrder: '' })),
+                    };
+                    materialsData[monthKey].push(targetMaterial);
+                    addedCount++;
+                }
+
+                const stockStr = values[stockIndex]?.trim();
+                if (stockStr && isNaN(parseFloat(stockStr))) {
+                     errorMessages.push(`${currentLineNum}行目 (資材名: ${materialNameFromCsv}): 在庫「${stockStr}」は数値である必要があります。スキップしました。`);
+                     if (addedCount > 0 && targetMaterial.id === materialsData[monthKey][materialsData[monthKey].length -1].id) {
+                        materialsData[monthKey].pop();
+                        addedCount--;
+                     } else if (updatedCount > 0 && targetMaterial === materialsData[monthKey][existingMaterialIndex]) { // existingMaterialIndex を使うべき
+                        // 更新対象だった場合は、この行の更新を取りやめるが、件数からは引かない（エラーとして報告するため）
+                        // ただし、この行の処理自体をスキップするので、importedCount にも影響
+                     }
+                    continue; // この行の処理を中断
+                }
+                targetMaterial.stock = stockStr || '';
+
+
+                targetMaterial.remarks = remarksIndex !== -1 ? (values[remarksIndex]?.trim() || '') : '';
+
+                for (let weekIdx = 0; weekIdx < 5; weekIdx++) {
+                    targetMaterial.weeks[weekIdx] = targetMaterial.weeks[weekIdx] || { tueOrder: '', thuOrder: ''};
+                    const tueOrderIdx = orderHeaderIndices[weekIdx].tueOrder;
+                    const thuOrderIdx = orderHeaderIndices[weekIdx].thuOrder;
+
+                    if (tueOrderIdx !== -1 && values[tueOrderIdx] !== undefined) {
+                        const tueOrderStr = values[tueOrderIdx].trim();
+                        if (tueOrderStr && isNaN(parseInt(tueOrderStr))) {
+                            errorMessages.push(`${currentLineNum}行目 (資材名: ${materialNameFromCsv}): 第${weekIdx+1}火曜の発注数「${tueOrderStr}」は数値である必要があります。`);
+                            targetMaterial.weeks[weekIdx].tueOrder = '';
+                        } else {
+                            targetMaterial.weeks[weekIdx].tueOrder = tueOrderStr;
+                        }
+                    }
+                    if (thuOrderIdx !== -1 && values[thuOrderIdx] !== undefined) {
+                        const thuOrderStr = values[thuOrderIdx].trim();
+                        if (thuOrderStr && isNaN(parseInt(thuOrderStr))) {
+                            errorMessages.push(`${currentLineNum}行目 (資材名: ${materialNameFromCsv}): 第${weekIdx+1}木曜の発注数「${thuOrderStr}」は数値である必要があります。`);
+                            targetMaterial.weeks[weekIdx].thuOrder = '';
+                        } else {
+                            targetMaterial.weeks[weekIdx].thuOrder = thuOrderStr;
+                        }
+                    }
+                }
+                importedCount++;
+            }
+
+            let finalMessage = "";
+            if (importedCount > 0 || masterAddedCount > 0) {
+                saveAllData();
+                if (masterAddedCount > 0) {
+                    saveMaterialMasterData();
+                    renderMaterialMasterTable();
+                }
+
+                // ★ 修正: インポートされたデータに基づいて表示年月を更新
+                if (firstProcessedMonthKey) {
+                    const [impYear, impMonthNum] = firstProcessedMonthKey.split('-').map(Number);
+                    currentYear = impYear;
+                    currentMonth = impMonthNum - 1; // JavaScriptの月は0から始まるため
+                }
+                // もしインポートデータに有効な年月がなかった場合でも、既存のcurrentYear/Monthを維持する。
+                // populateMonthSelectとupdateMonthDisplayで現在の選択肢と表示が更新される。
+
+                populateMonthSelect();
+                updateMonthDisplay();
+                renderTableStructure();
+                renderTableBody();
+
+                finalMessage = `${importedCount}件の発注データが処理されました。\n(発注表 新規追加: ${addedCount}件, 発注表 更新: ${updatedCount}件)\n(資材マスタ 新規追加: ${masterAddedCount}件)`;
+                 if (errorMessages.length > 0) {
+                    finalMessage += `\n\n以下のエラー/警告があります:\n` + errorMessages.join('\n');
+                    showInfoDialog("インポート結果（一部エラーあり）", finalMessage, true);
+                } else {
+                    showToast(finalMessage.replace(/\n/g, ' '), 'success', 5000);
+                }
+            } else if (errorMessages.length > 0) {
+                 showInfoDialog("インポートエラー", "処理可能なデータがありませんでした。以下のエラー/警告を確認してください:\n" + errorMessages.join('\n'), true);
+            }
+             else {
+                showInfoDialog("インポート情報", "インポートできる有効な発注データが見つかりませんでした。ファイルの内容を確認してください。");
+            }
+            console.log("[PARSE_CSV] CSV parsing and import attempt complete.");
+        }
+
+        function saveAllData() {
+            console.log("[SAVE_ALL_DATA] Saving all data to localStorage.");
+            localStorage.setItem('materialManagementData', JSON.stringify(materialsData));
+            saveMonthLockStatus();
+        }
+
+
+    </script>
+</body>
+</html>
