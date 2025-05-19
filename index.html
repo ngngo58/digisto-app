@@ -35,20 +35,20 @@
         .sticky-table-header th {
             position: sticky;
             top: 0;
-            background-color: #374151;
+            background-color: #374151; /* Tailwind: bg-gray-700 */
             color: white;
             z-index: 30;
             vertical-align: top;
             padding-top: 0.75rem;
             padding-bottom: 0.75rem;
-            border-left: 1px solid #ffffff;
+            border-left: 1px solid #ffffff; /* ヘッダーセル間の区切り線 */
         }
         .sticky-table-header tr th:first-of-type {
-            border-left: none !important;
+            border-left: none !important; /* 最初のヘッダーセルの左枠線を削除 */
         }
         .sticky-table-header th.sticky-col-stock,
         .sticky-table-header th.sticky-col-unit-price {
-            border-right: 1px solid #ffffff !important;
+            border-right: 1px solid #ffffff !important; /* 固定列の右側の区切り線 */
         }
         .sticky-table-header th .sort-indicator,
         #materialMasterTable th .sort-indicator {
@@ -58,7 +58,7 @@
         .sticky-table-header th.sortable:hover,
         #materialMasterTable th.sortable:hover {
             cursor: pointer;
-            background-color: #4b5563;
+            background-color: #4b5563; /* Tailwind: bg-gray-600 */
         }
         .header-lock-checkbox {
             margin-left: 4px;
@@ -70,17 +70,17 @@
         .sticky-table-header .sticky-col-stock,
         .sticky-table-header .sticky-col-unit-price {
             position: sticky;
-            left: 0;
-            background-color: #374151;
-            z-index: 35;
+            left: 0; /* 'left' プロパティはJavaScriptで動的に設定 */
+            background-color: #374151; /* Tailwind: bg-gray-700 */
+            z-index: 35; /* ヘッダーより手前 */
         }
 
         /* 固定列 (ボディ) */
         tbody td {
             vertical-align: top;
-            padding-top: 0.375rem;
-            padding-bottom: 0.375rem;
-            border-right: 1px solid #e5e7eb;
+            padding-top: 0.375rem; /* Tailwind: py-1.5 */
+            padding-bottom: 0.375rem; /* Tailwind: py-1.5 */
+            border-right: 1px solid #e5e7eb; /* Tailwind: border-gray-200 */
         }
         tbody td:last-child {
             border-right: none;
@@ -90,11 +90,12 @@
         tbody .sticky-col-stock,
         tbody .sticky-col-unit-price {
             position: sticky;
-            z-index: 10;
+            /* 'left' プロパティはJavaScriptで動的に設定 */
+            z-index: 10; /* 通常のセルより手前 */
         }
         tbody .sticky-col-stock,
         tbody .sticky-col-unit-price {
-            border-right: 1px solid #e5e7eb !important;
+            border-right: 1px solid #e5e7eb !important; /* Tailwind: border-gray-200 */
         }
 
 
@@ -103,7 +104,7 @@
             background-color: white;
         }
         tbody tr:nth-child(even) td {
-            background-color: #f0f4f8;
+            background-color: #f0f4f8; /* 薄い青みがかったグレー */
         }
         tbody tr:nth-child(odd) .sticky-col-name,
         tbody tr:nth-child(odd) .sticky-col-stock,
@@ -113,16 +114,16 @@
         tbody tr:nth-child(even) .sticky-col-name,
         tbody tr:nth-child(even) .sticky-col-stock,
         tbody tr:nth-child(even) .sticky-col-unit-price {
-            background-color: #f0f4f8 !important;
+            background-color: #f0f4f8 !important; /* 薄い青みがかったグレー */
         }
 
         tbody tr:hover td {
-            background-color: #e0f2fe !important;
+            background-color: #e0f2fe !important; /* Tailwind: hover:bg-sky-100 */
         }
         tbody tr:hover .sticky-col-name,
         tbody tr:hover .sticky-col-stock,
         tbody tr:hover .sticky-col-unit-price {
-            background-color: #e0f2fe !important;
+            background-color: #e0f2fe !important; /* Tailwind: hover:bg-sky-100 */
         }
 
         /* 入力フィールドのスタイル */
@@ -131,10 +132,10 @@
         td select,
         td textarea {
             width: 100%;
-            min-width: 70px;
-            padding: 0.25rem 0.5rem;
-            border: 1px solid #D1D5DB;
-            border-radius: 0.375rem;
+            min-width: 70px; /* 最小幅 */
+            padding: 0.25rem 0.5rem; /* Tailwind: px-2 py-1 */
+            border: 1px solid #D1D5DB; /* Tailwind: border-gray-300 */
+            border-radius: 0.375rem; /* Tailwind: rounded-md */
             box-sizing: border-box;
             font-family: inherit;
             font-size: inherit;
@@ -148,15 +149,15 @@
         td.unit-price-cell,
         td.total-order-amount-cell {
             text-align: right;
-            padding-right: 0.75rem;
+            padding-right: 0.75rem; /* Tailwind: pr-3 */
             font-weight: normal;
             vertical-align: middle;
         }
          td.total-order-cell {
             text-align: right;
-            padding-right: 0.75rem;
+            padding-right: 0.75rem; /* Tailwind: pr-3 */
             font-weight: bold;
-            background-color: #e5e7eb;
+            background-color: #e5e7eb; /* Tailwind: bg-gray-200 */
             vertical-align: middle;
         }
 
@@ -164,21 +165,21 @@
         /* 数量増減ボタンの新しいスタイル */
         .quantity-controls { display: flex; align-items: center; }
         .quantity-controls input[type="number"] {
-            width: calc(100% - 64px);
+            width: calc(100% - 64px); /* ボタン2つ分の幅を引く */
             text-align: right;
-            border-radius: 0;
+            border-radius: 0; /* 中央の入力欄は角丸なし */
             border-left: none;
             border-right: none;
         }
         .quantity-btn {
             width: 32px;
-            height: calc(1.5em + 0.5rem + 2px);
-            padding: 0.25rem;
-            border: 1px solid #D1D5DB;
+            height: calc(1.5em + 0.5rem + 2px); /* 入力フィールドの高さに合わせる (py-1 + border) */
+            padding: 0.25rem; /* Tailwind: p-1 */
+            border: 1px solid #D1D5DB; /* Tailwind: border-gray-300 */
             color: white;
             cursor: pointer;
             font-weight: bold;
-            font-size: 1.125rem;
+            font-size: 1.125rem; /* Tailwind: text-lg */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -186,35 +187,37 @@
         }
         .increase-btn {
             background-color: #14B8A6; /* Tailwind: teal-500 */
-            border-top-left-radius: 0.375rem;
-            border-bottom-left-radius: 0.375rem;
+            border-top-left-radius: 0.375rem; /* Tailwind: rounded-l-md */
+            border-bottom-left-radius: 0.375rem; /* Tailwind: rounded-l-md */
             border-right: none;
         }
         .increase-btn:hover { background-color: #0D9488; } /* Tailwind: teal-600 */
         .decrease-btn {
             background-color: #64748B; /* Tailwind: slate-500 */
-            border-top-right-radius: 0.375rem;
-            border-bottom-right-radius: 0.375rem;
+            border-top-right-radius: 0.375rem; /* Tailwind: rounded-r-md */
+            border-bottom-right-radius: 0.375rem; /* Tailwind: rounded-r-md */
             border-left: none;
         }
         .decrease-btn:hover { background-color: #475569; } /* Tailwind: slate-600 */
 
+        /* Chrome, Safari, Edge, Opera の数値入力の矢印を非表示 */
         input[type=number]::-webkit-inner-spin-button,
         input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        /* Firefox の数値入力の矢印を非表示 */
         input[type=number] { -moz-appearance: textfield; }
 
         /* 備考欄フローティング表示用スタイル */
         .remarks-input-wrapper { position: relative; }
         .remarks-floating-textarea {
-            position: fixed;
+            position: fixed; /* 画面に固定 */
             background-color: white;
-            border: 1px solid #6b7280;
+            border: 1px solid #6b7280; /* Tailwind: border-gray-500 */
             box-shadow: 0 6px 12px rgba(0,0,0,0.15);
             z-index: 50;
-            padding: 0.75rem;
-            border-radius: 0.375rem;
-            font-size: 0.875rem;
-            line-height: 1.25rem;
+            padding: 0.75rem; /* Tailwind: p-3 */
+            border-radius: 0.375rem; /* Tailwind: rounded-md */
+            font-size: 0.875rem; /* Tailwind: text-sm */
+            line-height: 1.25rem; /* Tailwind: leading-5 */
             overflow-y: auto;
             min-width: 250px;
             min-height: 80px;
@@ -229,16 +232,16 @@
             z-index: 100;
             max-width: 300px;
             word-wrap: break-word;
-            border-radius: 0.375rem;
+            border-radius: 0.375rem; /* Tailwind: rounded-md */
         }
         /* 月選択プルダウンのスタイル */
         #monthSelect {
-            padding: 0.6rem 1rem;
-            border-radius: 0.375rem;
-            border: 1px solid #D1D5DB;
-            font-size: 1.125rem;
-            font-weight: 600;
-            color: #374151;
+            padding: 0.6rem 1rem; /* 上下左右のパディングを調整 */
+            border-radius: 0.375rem; /* Tailwind: rounded-md */
+            border: 1px solid #D1D5DB; /* Tailwind: border-gray-300 */
+            font-size: 1.125rem; /* Tailwind: text-lg */
+            font-weight: 600; /* Tailwind: font-semibold */
+            color: #374151; /* Tailwind: text-gray-700 */
             background-color: white;
             cursor: pointer;
         }
@@ -255,17 +258,17 @@
             justify-content: center;
         }
         .action-btn-icon svg {
-            margin-right: 0.5rem;
+            margin-right: 0.5rem; /* Tailwind: mr-2 */
         }
         #exportScopeSelect { /* エクスポート範囲選択のスタイル */
-            padding: 0.5rem 0.75rem;
-            font-size: 0.875rem;
-            line-height: 1.25rem;
-            border-radius: 0.375rem;
-            border: 1px solid #D1D5DB;
+            padding: 0.5rem 0.75rem; /* Tailwind: px-3 py-2 */
+            font-size: 0.875rem; /* Tailwind: text-sm */
+            line-height: 1.25rem; /* Tailwind: leading-5 */
+            border-radius: 0.375rem; /* Tailwind: rounded-md */
+            border: 1px solid #D1D5DB; /* Tailwind: border-gray-300 */
             background-color: white;
             cursor: pointer;
-            margin-left: 0.5rem;
+            margin-left: 0.5rem; /* Tailwind: ml-2 */
         }
         .action-group-label { /* グループラベルのスタイル */
             font-size: 0.875rem; /* Tailwind: text-sm */
@@ -274,7 +277,7 @@
             font-weight: 500; /* Tailwind: font-medium */
         }
         .lock-checkbox { /* ロック用チェックボックスのスタイル */
-            margin-left: 0.5rem;
+            margin-left: 0.5rem; /* Tailwind: ml-2 */
             cursor: pointer;
         }
         .order-cell-content { /* 発注数とロックチェックボックスを横並びにするためのコンテナ */
@@ -300,22 +303,22 @@
             transform: translate(-50%, -50%);
             background-color: white;
             border: 1px solid #ccc;
-            border-radius: 0.5rem;
-            padding: 1.5rem;
+            border-radius: 0.5rem; /* Tailwind: rounded-lg */
+            padding: 1.5rem; /* Tailwind: p-6 */
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             z-index: 1002; /* モーダルより手前に表示 */
             display: none; /* 初期状態は非表示 */
             text-align: center;
         }
         #customConfirmDialog p {
-            margin-bottom: 1rem;
-            font-size: 1rem;
+            margin-bottom: 1rem; /* Tailwind: mb-4 */
+            font-size: 1rem; /* Tailwind: text-base */
         }
         #customConfirmDialog button {
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
+            padding: 0.5rem 1rem; /* Tailwind: px-4 py-2 */
+            border-radius: 0.375rem; /* Tailwind: rounded-md */
             cursor: pointer;
-            margin: 0 0.5rem;
+            margin: 0 0.5rem; /* Tailwind: mx-2 */
         }
         #confirmYesBtn {
             background-color: #dc2626; /* Tailwind: bg-red-600 */
@@ -367,7 +370,9 @@
             width: 5rem;
             text-align: center;
         }
-        #materialMasterTable td.master-name-cell {
+        #materialMasterTable td.master-name-cell,
+        #materialMasterTable td.master-dimension-cell,
+        #materialMasterTable td.master-box-size-cell {
             text-align: center;
         }
         #materialMasterTable td.master-unit-price-cell {
@@ -386,10 +391,10 @@
         }
         .master-form-input {
             width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #D1D5DB;
-            border-radius: 0.375rem;
-            margin-bottom: 0.5rem;
+            padding: 0.5rem; /* Tailwind: p-2 */
+            border: 1px solid #D1D5DB; /* Tailwind: border-gray-300 */
+            border-radius: 0.375rem; /* Tailwind: rounded-md */
+            margin-bottom: 0.5rem; /* Tailwind: mb-2 */
         }
         .inline-error-message {
             color: #dc2626; /* Tailwind: text-red-600 */
@@ -417,27 +422,27 @@
             border: 1px solid #888;
             width: 90%;
             max-width: 600px;
-            border-radius: 0.5rem;
+            border-radius: 0.5rem; /* Tailwind: rounded-lg */
             position: relative;
         }
         .modal-content h3 {
-            margin-bottom: 1rem;
-            font-size: 1.25rem;
-            font-weight: 600;
+            margin-bottom: 1rem; /* Tailwind: mb-4 */
+            font-size: 1.25rem; /* Tailwind: text-xl */
+            font-weight: 600; /* Tailwind: font-semibold */
         }
         .modal-content p {
-            margin-bottom: 0.75rem;
-            font-size: 0.875rem;
+            margin-bottom: 0.75rem; /* Tailwind: mb-3 */
+            font-size: 0.875rem; /* Tailwind: text-sm */
             line-height: 1.5;
-            white-space: pre-wrap;
+            white-space: pre-wrap; /* 改行をそのまま表示 */
         }
         .modal-content ul {
             list-style-type: disc;
-            margin-left: 1.5rem;
-            margin-bottom: 1rem;
+            margin-left: 1.5rem; /* Tailwind: ml-6 */
+            margin-bottom: 1rem; /* Tailwind: mb-4 */
         }
         .modal-content li {
-            font-size: 0.875rem;
+            font-size: 0.875rem; /* Tailwind: text-sm */
         }
         .modal-close-button {
             position: absolute;
@@ -457,21 +462,21 @@
             position: fixed;
             top: 20px;
             right: 20px;
-            z-index: 1005;
+            z-index: 1005; /* モーダルよりさらに手前 */
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
         .toast {
-            background-color: #374151;
+            background-color: #374151; /* Tailwind: bg-gray-700 */
             color: white;
             padding: 12px 20px;
-            border-radius: 0.375rem;
+            border-radius: 0.375rem; /* Tailwind: rounded-md */
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
             opacity: 0;
             transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
             transform: translateX(100%);
-            font-size: 0.875rem;
+            font-size: 0.875rem; /* Tailwind: text-sm */
         }
         .toast.show {
             opacity: 1;
@@ -486,22 +491,18 @@
 
     </style>
 </head>
-<body class="bg-gray-100 font-sans pt-6 sm:pt-8">
-    <div id="toastContainer"></div>
+<body class="bg-gray-100 font-sans pt-6 sm:pt-8"> <div id="toastContainer"></div>
 
-    <div class="container mx-auto px-1 sm:px-2">
-        <header class="sticky-page-header py-3">
+    <div class="container mx-auto px-1 sm:px-2"> <header class="sticky-page-header py-3">
             <h1 class="text-3xl sm:text-4xl font-bold text-center text-gray-800 mb-4">
                 <span>デジタルストッカー ~DigiSto~</span>
                 <span id="appVersionDisplay"></span>
             </h1>
-            <div class="flex justify-center items-center max-w-3xl mx-auto px-2">
-                <button id="prevMonthBtn" class="px-6 py-3 sm:px-7 sm:py-3.5 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors text-lg sm:text-xl shadow-md">前の月</button>
+            <div class="flex justify-center items-center max-w-3xl mx-auto px-2"> <button id="prevMonthBtn" class="px-6 py-3 sm:px-7 sm:py-3.5 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors text-lg sm:text-xl shadow-md">前の月</button>
                 <select id="monthSelect" class="text-2xl sm:text-3xl font-bold text-gray-700 text-center flex-grow mx-4 sm:mx-8"></select>
                 <button id="nextMonthBtn" class="px-6 py-3 sm:px-7 sm:py-3.5 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors text-lg sm:text-xl shadow-md">次の月</button>
             </div>
-            <div class="mt-4 text-center space-x-2">
-                <button id="addMaterialBtn" class="px-5 py-2.5 sm:px-6 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md text-base sm:text-lg">
+            <div class="mt-4 text-center space-x-2"> <button id="addMaterialBtn" class="px-5 py-2.5 sm:px-6 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md text-base sm:text-lg">
                     新しい資材を登録
                 </button>
                 <input type="file" id="csvFile" accept=".csv" class="hidden">
@@ -524,14 +525,22 @@
 
         <div id="materialMasterSection" class="hidden my-6 p-4 bg-gray-50 rounded-lg shadow">
             <h2 class="text-2xl font-semibold mb-4 text-center">資材マスタ管理</h2>
-            <div class="mb-4 grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+            <div class="mb-4 grid grid-cols-1 md:grid-cols-7 gap-4 items-end">
                 <div>
-                    <input type="text" id="newMasterName" placeholder="資材名" class="master-form-input md:col-span-1">
+                    <input type="text" id="newMasterName" placeholder="資材名" class="master-form-input">
                     <div id="newMasterNameError" class="inline-error-message"></div>
                 </div>
                 <div>
                     <input type="number" id="newMasterUnitPrice" placeholder="単価" class="master-form-input">
                     <div id="newMasterUnitPriceError" class="inline-error-message"></div>
+                </div>
+                <div>
+                    <input type="text" id="newMasterDimension" placeholder="寸法 (例:260*150*150)" class="master-form-input">
+                    <div id="newMasterDimensionError" class="inline-error-message"></div>
+                </div>
+                <div>
+                    <input type="text" id="newMasterBoxSize" placeholder="箱サイズ (例:60)" class="master-form-input">
+                    <div id="newMasterBoxSizeError" class="inline-error-message"></div>
                 </div>
                 <div>
                     <input type="number" id="newMasterMinLot" placeholder="最小ロット" class="master-form-input">
@@ -566,6 +575,8 @@
                             <th class="master-checkbox-header"><input type="checkbox" id="masterSelectAllCheckbox" title="すべて選択/解除"></th>
                             <th class="sortable" data-sort-key="name">資材名 <span class="sort-indicator"></span></th>
                             <th class="sortable" data-sort-key="unitPrice">単価 <span class="sort-indicator"></span></th>
+                            <th class="sortable" data-sort-key="dimension">寸法 <span class="sort-indicator"></span></th>
+                            <th class="sortable" data-sort-key="boxSize">箱サイズ <span class="sort-indicator"></span></th>
                             <th class="sortable" data-sort-key="minLot">最小ロット <span class="sort-indicator"></span></th>
                             <th>単位</th>
                             <th class="sortable" data-sort-key="orderCompany">発注会社 <span class="sort-indicator"></span></th>
@@ -592,6 +603,16 @@
                     <label for="editMasterUnitPriceInput" class="block text-sm font-medium text-gray-700">単価</label>
                     <input type="number" id="editMasterUnitPriceInput" class="master-form-input">
                     <div id="editMasterUnitPriceError" class="inline-error-message"></div>
+                </div>
+                <div>
+                    <label for="editMasterDimensionInput" class="block text-sm font-medium text-gray-700">寸法</label>
+                    <input type="text" id="editMasterDimensionInput" class="master-form-input">
+                    <div id="editMasterDimensionError" class="inline-error-message"></div>
+                </div>
+                <div>
+                    <label for="editMasterBoxSizeInput" class="block text-sm font-medium text-gray-700">箱サイズ</label>
+                    <input type="text" id="editMasterBoxSizeInput" class="master-form-input">
+                    <div id="editMasterBoxSizeError" class="inline-error-message"></div>
                 </div>
                 <div>
                     <label for="editMasterMinLotInput" class="block text-sm font-medium text-gray-700">最小ロット</label>
@@ -643,7 +664,7 @@
 
 
     <script>
-        const APP_VERSION = "1.0.87"; // アプリケーションのバージョン (更新)
+        const APP_VERSION = "1.0.89"; // アプリケーションのバージョンを更新
         const ORDER_UNAVAILABLE_PREFIX = "【発注不可】";
 
         let currentYear = new Date().getFullYear();
@@ -677,6 +698,8 @@
         const materialMasterSection = document.getElementById('materialMasterSection');
         const newMasterNameInput = document.getElementById('newMasterName');
         const newMasterUnitPriceInput = document.getElementById('newMasterUnitPrice');
+        const newMasterDimensionInput = document.getElementById('newMasterDimension');
+        const newMasterBoxSizeInput = document.getElementById('newMasterBoxSize');
         const newMasterUnitInput = document.getElementById('newMasterUnit');
         const newMasterMinLotInput = document.getElementById('newMasterMinLot');
         const newMasterOrderCompanyInput = document.getElementById('newMasterOrderCompany');
@@ -688,6 +711,8 @@
         const editMasterIdInput = document.getElementById('editMasterId');
         const editMasterNameInput = document.getElementById('editMasterNameInput');
         const editMasterUnitPriceInput = document.getElementById('editMasterUnitPriceInput');
+        const editMasterDimensionInput = document.getElementById('editMasterDimensionInput');
+        const editMasterBoxSizeInput = document.getElementById('editMasterBoxSizeInput');
         const editMasterUnitInput = document.getElementById('editMasterUnitInput');
         const editMasterMinLotInput = document.getElementById('editMasterMinLotInput');
         const editMasterOrderCompanyInput = document.getElementById('editMasterOrderCompanyInput');
@@ -703,12 +728,16 @@
 
         const newMasterNameError = document.getElementById('newMasterNameError');
         const newMasterUnitPriceError = document.getElementById('newMasterUnitPriceError');
+        const newMasterDimensionError = document.getElementById('newMasterDimensionError');
+        const newMasterBoxSizeError = document.getElementById('newMasterBoxSizeError');
         const newMasterMinLotError = document.getElementById('newMasterMinLotError');
         const newMasterUnitError = document.getElementById('newMasterUnitError');
         const newMasterOrderCompanyError = document.getElementById('newMasterOrderCompanyError');
 
         const editMasterNameError = document.getElementById('editMasterNameError');
         const editMasterUnitPriceError = document.getElementById('editMasterUnitPriceError');
+        const editMasterDimensionError = document.getElementById('editMasterDimensionError');
+        const editMasterBoxSizeError = document.getElementById('editMasterBoxSizeError');
         const editMasterMinLotError = document.getElementById('editMasterMinLotError');
         const editMasterUnitError = document.getElementById('editMasterUnitError');
         const editMasterOrderCompanyError = document.getElementById('editMasterOrderCompanyError');
@@ -938,7 +967,7 @@
             infoDialogCloseBtn.addEventListener('click', hideInfoDialog);
             infoDialogOkBtn.addEventListener('click', hideInfoDialog);
 
-            [newMasterNameInput, newMasterUnitPriceInput, newMasterMinLotInput, newMasterUnitInput, newMasterOrderCompanyInput].forEach(input => {
+            [newMasterNameInput, newMasterUnitPriceInput, newMasterDimensionInput, newMasterBoxSizeInput, newMasterMinLotInput, newMasterUnitInput, newMasterOrderCompanyInput].forEach(input => {
                 if (input) {
                     input.addEventListener('input', (e) => {
                         const errorElId = e.target.id + 'Error';
@@ -949,7 +978,7 @@
                     });
                 }
             });
-            [editMasterNameInput, editMasterUnitPriceInput, editMasterMinLotInput, editMasterUnitInput, editMasterOrderCompanyInput].forEach(input => {
+            [editMasterNameInput, editMasterUnitPriceInput, editMasterDimensionInput, editMasterBoxSizeInput, editMasterMinLotInput, editMasterUnitInput, editMasterOrderCompanyInput].forEach(input => {
                  if (input) {
                     input.addEventListener('input', (e) => {
                         const errorElId = e.target.id + 'Error';
@@ -1017,7 +1046,6 @@
             if (Array.from(monthSelect.options).some(opt => opt.value === selectValue)) {
                 monthSelect.value = selectValue;
             } else if (monthSelect.options.length > 0) {
-                // 該当がない場合、最初の有効な月を選択させるか、現在の表示を維持する
             }
         }
 
@@ -1032,7 +1060,7 @@
                 const currentDate = new Date(year, month, day);
                 const dayOfWeek = currentDate.getDay();
 
-                if (day === 1 || dayOfWeek === 1) {
+                if (day === 1 || dayOfWeek === 1 ) {
                     if (orderDaysByWeek.length > 0 &&
                         (orderDaysByWeek[orderDaysByWeek.length -1].tue || orderDaysByWeek[orderDaysByWeek.length -1].thu)) {
                         weekCounter++;
@@ -1054,9 +1082,9 @@
                 }
 
                 if (currentDate.getMonth() === month) {
-                    if (dayOfWeek === 2) {
+                    if (dayOfWeek === 2 ) {
                         currentWeekData.tue = new Date(currentDate);
-                    } else if (dayOfWeek === 4) {
+                    } else if (dayOfWeek === 4 ) {
                         currentWeekData.thu = new Date(currentDate);
                     }
                 }
@@ -1271,9 +1299,9 @@
                 masterOptionsArray.sort((a, b) => {
                     let valA = a[currentMasterSortColumn];
                     let valB = b[currentMasterSortColumn];
-                    if (currentMasterSortColumn === 'unitPrice' || currentMasterSortColumn === 'minLot') {
-                        valA = Number(valA) || 0;
-                        valB = Number(valB) || 0;
+                    if (currentMasterSortColumn === 'unitPrice' || currentMasterSortColumn === 'minLot' || currentMasterSortColumn === 'dimension' || currentMasterSortColumn === 'boxSize') {
+                        valA = String(valA || '').toLowerCase();
+                        valB = String(valB || '').toLowerCase();
                     } else {
                         valA = String(valA || '').toLowerCase();
                         valB = String(valB || '').toLowerCase();
@@ -1288,7 +1316,6 @@
             }
 
             masterOptionsArray.forEach(master => {
-                // ★修正: 発注不可の資材は、現在選択されている場合のみオプションに追加
                 if (master.id === material.masterId || (master.name && !master.name.startsWith(ORDER_UNAVAILABLE_PREFIX))) {
                     cellsHtml += `<option value="${master.id}" ${material.masterId === master.id ? 'selected' : ''}>${master.name}</option>`;
                 }
@@ -1584,7 +1611,7 @@
 
             currentMaterialNamePopup = popup;
             if (clickEvent) {
-                clickEvent.stopPropagation();
+                 clickEvent.stopPropagation();
             }
         }
 
@@ -1654,7 +1681,7 @@
                         if (currentMasterSortColumn === 'unitPrice' || currentMasterSortColumn === 'minLot') {
                             valA = Number(valA) || 0;
                             valB = Number(valB) || 0;
-                        } else {
+                        } else { // name, orderCompany, dimension, boxSize
                             valA = String(valA || '').toLowerCase();
                             valB = String(valB || '').toLowerCase();
                         }
@@ -1687,6 +1714,14 @@
                 unitPriceCell.textContent = master.unitPrice;
                 unitPriceCell.classList.add('master-unit-price-cell');
 
+                const dimensionCell = row.insertCell();
+                dimensionCell.textContent = master.dimension || '';
+                dimensionCell.classList.add('master-dimension-cell');
+
+                const boxSizeCell = row.insertCell();
+                boxSizeCell.textContent = master.boxSize || '';
+                boxSizeCell.classList.add('master-box-size-cell');
+
                 const minLotCell = row.insertCell();
                 minLotCell.textContent = master.minLot;
                 minLotCell.classList.add('master-min-lot-cell');
@@ -1713,6 +1748,8 @@
         function clearInlineErrors() {
             if (newMasterNameError) newMasterNameError.textContent = '';
             if (newMasterUnitPriceError) newMasterUnitPriceError.textContent = '';
+            if (newMasterDimensionError) newMasterDimensionError.textContent = '';
+            if (newMasterBoxSizeError) newMasterBoxSizeError.textContent = '';
             if (newMasterMinLotError) newMasterMinLotError.textContent = '';
             if (newMasterUnitError) newMasterUnitError.textContent = '';
             if (newMasterOrderCompanyError) newMasterOrderCompanyError.textContent = '';
@@ -1720,6 +1757,8 @@
 
             if (editMasterNameError) editMasterNameError.textContent = '';
             if (editMasterUnitPriceError) editMasterUnitPriceError.textContent = '';
+            if (editMasterDimensionError) editMasterDimensionError.textContent = '';
+            if (editMasterBoxSizeError) editMasterBoxSizeError.textContent = '';
             if (editMasterMinLotError) editMasterMinLotError.textContent = '';
             if (editMasterUnitError) editMasterUnitError.textContent = '';
             if (editMasterOrderCompanyError) editMasterOrderCompanyError.textContent = '';
@@ -1730,6 +1769,8 @@
             let isValid = true;
             const name = newMasterNameInput.value.trim();
             const unitPriceStr = newMasterUnitPriceInput.value.trim();
+            const dimension = newMasterDimensionInput.value.trim();
+            const boxSize = newMasterBoxSizeInput.value.trim();
             const minLotStr = newMasterMinLotInput.value.trim();
             const unit = newMasterUnitInput.value.trim();
             const orderCompany = newMasterOrderCompanyInput.value.trim();
@@ -1754,17 +1795,21 @@
                 isValid = false;
             }
 
-
             if (!isValid) return;
 
             const newId = `master-${Date.now()}-${Math.random().toString(36).substr(2,5)}`;
-            materialMasterData[newId] = { id: newId, name, unitPrice: unitPrice || 0, unit, minLot: minLot || 0, orderCompany };
+            materialMasterData[newId] = {
+                id: newId, name, unitPrice: unitPrice || 0, dimension, boxSize,
+                minLot: minLot || 0, unit, orderCompany
+            };
             saveMaterialMasterData();
             renderMaterialMasterTable();
             renderTableBody();
             showToast(`資材「${name}」を登録しました。`, 'success');
             newMasterNameInput.value = '';
             newMasterUnitPriceInput.value = '';
+            newMasterDimensionInput.value = '';
+            newMasterBoxSizeInput.value = '';
             newMasterUnitInput.value = '';
             newMasterMinLotInput.value = '';
             newMasterOrderCompanyInput.value = '';
@@ -1778,6 +1823,8 @@
             editMasterIdInput.value = master.id;
             editMasterNameInput.value = master.name;
             editMasterUnitPriceInput.value = master.unitPrice;
+            editMasterDimensionInput.value = master.dimension || '';
+            editMasterBoxSizeInput.value = master.boxSize || '';
             editMasterMinLotInput.value = master.minLot;
             editMasterUnitInput.value = master.unit;
             editMasterOrderCompanyInput.value = master.orderCompany || '';
@@ -1795,6 +1842,8 @@
             const id = editMasterIdInput.value;
             const name = editMasterNameInput.value.trim();
             const unitPriceStr = editMasterUnitPriceInput.value.trim();
+            const dimension = editMasterDimensionInput.value.trim();
+            const boxSize = editMasterBoxSizeInput.value.trim();
             const minLotStr = editMasterMinLotInput.value.trim();
             const unit = editMasterUnitInput.value.trim();
             const orderCompany = editMasterOrderCompanyInput.value.trim();
@@ -1825,7 +1874,10 @@
             showCustomConfirm(`資材マスタの「${name}」の更新内容を保存しますか？\n（この資材を使用している発注表のデータも影響を受けます）`, (confirmed) => {
                 if (confirmed) {
                     if (materialMasterData[id]) {
-                        materialMasterData[id] = { id, name, unitPrice: unitPrice || 0, unit, minLot: minLot || 0, orderCompany };
+                        materialMasterData[id] = {
+                            id, name, unitPrice: unitPrice || 0, dimension, boxSize,
+                            minLot: minLot || 0, unit, orderCompany
+                        };
                         saveMaterialMasterData();
                         renderMaterialMasterTable(null, true);
                         renderTableBody();
@@ -1878,7 +1930,7 @@
                         console.log(`[MASTER_DELETE] Deleted ${deletedCount} items.`);
                         const selectAllCheckbox = materialMasterTableEl.tHead.querySelector('#masterSelectAllCheckbox');
                         if (selectAllCheckbox) {
-                            selectAllCheckbox.checked = false;
+                             selectAllCheckbox.checked = false;
                         }
                     }
                 }
@@ -1917,7 +1969,7 @@
             }
 
             let csvContent = "\uFEFF";
-            const headers = ["資材ID", "資材名", "単価", "最小ロット", "単位", "発注会社"];
+            const headers = ["資材ID", "資材名", "単価", "寸法", "箱サイズ", "最小ロット", "単位", "発注会社"];
             csvContent += headers.map(h => `"${String(h).replace(/"/g, '""')}"`).join(",") + "\r\n";
 
             Object.values(materialMasterData).forEach(master => {
@@ -1925,6 +1977,8 @@
                     `"${master.id ? String(master.id).replace(/"/g, '""') : ''}"`,
                     `"${master.name ? String(master.name).replace(/"/g, '""') : ''}"`,
                     `"${master.unitPrice !== undefined ? String(master.unitPrice).replace(/"/g, '""') : ''}"`,
+                    `"${master.dimension ? String(master.dimension).replace(/"/g, '""') : ''}"`,
+                    `"${master.boxSize ? String(master.boxSize).replace(/"/g, '""') : ''}"`,
                     `"${master.minLot !== undefined ? String(master.minLot).replace(/"/g, '""') : ''}"`,
                     `"${master.unit ? String(master.unit).replace(/"/g, '""') : ''}"`,
                     `"${master.orderCompany ? String(master.orderCompany).replace(/"/g, '""') : ''}"`
@@ -2029,6 +2083,8 @@
             const idIndex = csvHeaders.findIndex(h => h === "資材ID");
             const nameIndex = csvHeaders.findIndex(h => h === "資材名");
             const unitPriceIndex = csvHeaders.findIndex(h => h === "単価");
+            const dimensionIndex = csvHeaders.findIndex(h => h === "寸法");
+            const boxSizeIndex = csvHeaders.findIndex(h => h === "箱サイズ");
             const minLotIndex = csvHeaders.findIndex(h => h === "最小ロット");
             const unitIndex = csvHeaders.findIndex(h => h === "単位");
             const orderCompanyIndex = csvHeaders.findIndex(h => h === "発注会社");
@@ -2065,6 +2121,8 @@
                     continue;
                 }
 
+                const csvDimension = dimensionIndex !== -1 ? (values[dimensionIndex]?.trim() || '') : '';
+                const csvBoxSize = boxSizeIndex !== -1 ? (values[boxSizeIndex]?.trim() || '') : '';
                 const csvUnit = unitIndex !== -1 ? (values[unitIndex]?.trim() || '') : '';
                 const csvOrderCompany = orderCompanyIndex !== -1 ? (values[orderCompanyIndex]?.trim() || '') : '';
                 const csvMasterId = idIndex !== -1 ? (values[idIndex]?.trim() || null) : null;
@@ -2077,6 +2135,8 @@
                 const masterEntryData = {
                     name: csvMasterName,
                     unitPrice: (csvUnitPrice === null || isNaN(csvUnitPrice)) ? 0 : csvUnitPrice,
+                    dimension: csvDimension,
+                    boxSize: csvBoxSize,
                     minLot: (csvMinLot === null || isNaN(csvMinLot)) ? 0 : csvMinLot,
                     unit: csvUnit,
                     orderCompany: csvOrderCompany
@@ -2195,7 +2255,7 @@
             console.log("[EXPORT_CSV] Export complete for scope:", scope);
         }
 
-        function handleFileUpload(event) { // 発注データのインポート
+        function handleFileUpload(event) {
             console.log("[IMPORT_CSV] File selected.");
             const file = event.target.files[0];
             if (file) {
@@ -2308,6 +2368,7 @@
                     const unitPriceFromCsv = parseNumericValue(unitPriceFromCsvStr, true) || 0;
                     materialMasterData[masterId] = {
                         id: masterId, name: materialNameFromCsv, unitPrice: unitPriceFromCsv,
+                        dimension: '', boxSize: '',
                         unit: '', minLot: 0, orderCompany: '' };
                     masterAddedCount++;
                     errorMessages.push(`情報 (${currentLineNum}行目): 資材マスタに「${materialNameFromCsv}」を新規登録しました (単価: ${unitPriceFromCsv || 0})。`);
