@@ -643,7 +643,8 @@
 
 
     <script>
-        const APP_VERSION = "1.0.85"; // アプリケーションのバージョン (更新)
+        const APP_VERSION = "1.0.87"; // アプリケーションのバージョン (更新)
+        const ORDER_UNAVAILABLE_PREFIX = "【発注不可】";
 
         let currentYear = new Date().getFullYear();
         let currentMonth = new Date().getMonth(); // 0-11 (January is 0, December is 11)
@@ -1287,7 +1288,10 @@
             }
 
             masterOptionsArray.forEach(master => {
-                cellsHtml += `<option value="${master.id}" ${material.masterId === master.id ? 'selected' : ''}>${master.name}</option>`;
+                // ★修正: 発注不可の資材は、現在選択されている場合のみオプションに追加
+                if (master.id === material.masterId || (master.name && !master.name.startsWith(ORDER_UNAVAILABLE_PREFIX))) {
+                    cellsHtml += `<option value="${master.id}" ${material.masterId === master.id ? 'selected' : ''}>${master.name}</option>`;
+                }
             });
             cellsHtml += `</select>
                 </td>
